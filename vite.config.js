@@ -8,4 +8,10 @@ export default defineConfig({
             refresh: true,
         }),
     ],
+    server: {
+        host: 'nestay.test',
+        hmr: {
+            host: 'nestay.test',
+        },
+    },
 });

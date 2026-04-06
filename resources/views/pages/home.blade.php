@@ -3,222 +3,268 @@
 @section('content')
 <div id="view-home">
 
-    <!-- HERO SECTION -->
-    <section class="hero" style="min-height: calc(100vh - 66px); display: grid; grid-template-columns: 1fr 1fr; overflow: hidden; background: var(--cr); position: relative; padding: 0;">
-        <div class="hero-left" style="padding: 56px 48px 56px 56px; display: flex; flex-direction: column; justify-content: center; z-index: 5; position: relative;">
+    <!-- HERO MASTER MIX (WITH TRAVEL BACKGROUND) -->
+    <section class="hero-mix">
+        <div class="hero-bg"></div>
+        
+        <div class="hero-content">
+            <h1 class="hero-h1">Tu nido en cada<br><span>rincón del mundo.</span></h1>
             
-            <!-- Decorative background SVG lines -->
-            <svg style="position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:0;opacity:.55" viewBox="0 0 700 700" preserveAspectRatio="xMidYMid slice">
-                <path d="M-40 500 Q200 300 500 400" stroke="#E07A5F" stroke-width="0.7" fill="none" opacity=".18"/>
-                <path d="M0 600 Q250 350 600 450" stroke="#81B29A" stroke-width="0.6" fill="none" opacity=".14"/>
-                <circle cx="80" cy="120" r="2" fill="#E07A5F" opacity=".18"/>
-                <circle cx="580" cy="160" r="2" fill="#81B29A" opacity=".16"/>
-                <circle cx="660" cy="60" r="120" stroke="#E07A5F" stroke-width="0.8" fill="none" opacity=".07"/>
-            </svg>
-
-            <div class="slogan-tag"><span class="spark">✦</span> Tu nido en cada rincón del mundo</div>
-
-            <h1 class="hero-h1" style="font-family:'Fraunces',serif; font-size:72px; line-height:.95; font-weight:900; letter-spacing:-2.5px; margin-bottom:14px; animation:fadeUp .6s cubic-bezier(.22,1,.36,1) .06s both;">
-                Tu nido en cada<br>
-                <span class="it" style="font-style:italic; color:var(--t); font-weight:400; font-size:76px; letter-spacing:-2px; display:block; line-height:.95;">rincón del mundo.</span>
-            </h1>
-
-            <blockquote class="hero-slogan" style="font-family:'Instrument Serif',serif; font-size:18px; font-weight:400; font-style:italic; color:var(--gm); border-left:3px solid var(--t); padding-left:18px; margin-bottom:28px; max-width:460px; animation:fadeUp .6s cubic-bezier(.22,1,.36,1) .14s both;">
+            <div class="hero-quote">
                 "No buscamos hoteles.<br>Encontramos tu <strong>próximo nido en el mundo.</strong>"
-            </blockquote>
+            </div>
 
-            <!-- MAIN SEARCH BOX (SBOX) -->
-            <div class="sbox" id="main-search">
-                <div class="stabs">
-                    <button class="stab on">Hoteles</button>
-                    <button class="stab">Apartamentos</button>
-                    <button class="stab">Villas</button>
+            <!-- TABBED SEARCH BOX -->
+            <div class="sbox-mix">
+                <div class="stabs-mix">
+                    <button class="stab-mix on">Hoteles</button>
+                    <button class="stab-mix">Apartamentos</button>
+                    <button class="stab-mix">Casas rurales</button>
+                    <button class="stab-mix">Villas</button>
                 </div>
                 
                 <form action="{{ route('search') }}" method="GET" onsubmit="showLoader()">
-                    <div class="sfields">
-                        <div class="sfield">
-                            <label>Destino</label>
-                            <input type="text" name="destination" id="dest" placeholder="¿A dónde quieres ir?" required autocomplete="off">
-                            <div id="autocomplete-results" class="autocomplete-dropdown" style="display:none"></div>
+                    <div class="sfields-mix">
+                        <div class="sf-box">
+                            <label class="sf-label">📍 Destino</label>
+                            <input type="text" name="destination" id="dest" class="sf-val" placeholder="Ciudad, país o nombre..." required autocomplete="off">
                         </div>
-                        <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 9px;">
-                            <div class="sfield">
-                                <label>Llegada</label>
-                                <input type="date" name="check_in" id="cin" required>
-                            </div>
-                            <div class="sfield">
-                                <label>Salida</label>
-                                <input type="date" name="check_out" id="cout" required>
-                            </div>
+                        <div class="sf-box">
+                            <label class="sf-label">📅 Llegada</label>
+                            <input type="date" name="check_in" id="cin" class="sf-val" required>
+                        </div>
+                        <div class="sf-box">
+                            <label class="sf-label">📅 Salida</label>
+                            <input type="date" name="check_out" id="cout" class="sf-val" required>
+                        </div>
+                        <div class="sf-box" style="cursor:pointer" onclick="SearchMix.toggleGuest()">
+                            <label class="sf-label">👥 Huéspedes</label>
+                            <div class="sf-val" id="guest-summary">2 adultos · 1 hab</div>
+                            <input type="hidden" name="adults" id="adults-input" value="2">
+                            <input type="hidden" name="rooms" id="rooms-input" value="1">
                         </div>
                     </div>
 
-                    <!-- GUEST DROPDOWN -->
-                    <div style="display:flex; align-items:center; gap:10px; margin-top:14px; position:relative;">
-                        <div class="guest-trigger" id="guest-trigger" onclick="SearchModule.toggleGuestPanel()">
-                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-                            <span id="guest-summary">2 adultos · 1 habitación</span>
-                            <svg class="guest-chevron" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg>
-                        </div>
-
-                        <input type="hidden" name="adults" id="adults-input" value="2">
-                        <input type="hidden" name="rooms" id="rooms-input" value="1">
-
-                        <button type="submit" class="scta">
-                            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="6.5" cy="6.5" r="4.5"/><line x1="10" y1="10" x2="14.5" y2="14.5"/></svg>
+                    <div style="padding: 12px; display:flex; justify-content:flex-end">
+                        <button type="submit" class="sbtn-mix">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
                             Buscar nido
                         </button>
+                    </div>
 
-                        <div class="guest-panel" id="guest-panel" style="top: 100%; position: absolute; width: 100%; left: 0;">
-                            <div class="gp-row">
-                                <div class="gp-info">
-                                    <div class="gp-label">Adultos</div>
-                                    <div class="gp-sub">13 años o más</div>
-                                </div>
-                                <div class="gp-ctrl">
-                                    <button type="button" class="gp-btn" onclick="SearchModule.adjustGuest('adults', -1)">−</button>
-                                    <span class="gp-num" id="gp-adults">2</span>
-                                    <button type="button" class="gp-btn" onclick="SearchModule.adjustGuest('adults', 1)">+</button>
-                                </div>
+                    <!-- GUEST PANEL (UI FIXED) -->
+                    <div class="guest-hub-panel" id="guest-hub-panel">
+                        <div class="hub-row">
+                            <div class="hub-info">
+                                <h4>Adultos</h4>
+                                <p>13 años o más</p>
                             </div>
-                            <div class="gp-row">
-                                <div class="gp-info">
-                                    <div class="gp-label">Habitaciones</div>
-                                </div>
-                                <div class="gp-ctrl">
-                                    <button type="button" class="gp-btn" onclick="SearchModule.adjustGuest('rooms', -1)">−</button>
-                                    <span class="gp-num" id="gp-rooms">1</span>
-                                    <button type="button" class="gp-btn" onclick="SearchModule.adjustGuest('rooms', 1)">+</button>
-                                </div>
+                            <div class="hub-ctrl">
+                                <button type="button" class="hub-btn" onclick="SearchMix.adjust('adults', -1)">−</button>
+                                <span class="hub-num" id="hub-adults">2</span>
+                                <button type="button" class="hub-btn" onclick="SearchMix.adjust('adults', 1)">+</button>
                             </div>
-                            <button type="button" class="gp-done" onclick="SearchModule.toggleGuestPanel()">Listo</button>
                         </div>
+                        <div class="hub-row">
+                            <div class="hub-info"><h4>Habitaciones</h4></div>
+                            <div class="hub-ctrl">
+                                <button type="button" class="hub-btn" onclick="SearchMix.adjust('rooms', -1)">−</button>
+                                <span class="hub-num" id="hub-rooms">1</span>
+                                <button type="button" class="hub-btn" onclick="SearchMix.adjust('rooms', 1)">+</button>
+                            </div>
+                        </div>
+                        <button type="button" class="btn-primary" style="width:100%; margin-top:16px; border-radius:15px" onclick="SearchMix.toggleGuest()">Listo</button>
                     </div>
                 </form>
             </div>
-
-            <div class="hstats">
-                <div class="hstat"><div class="n">2.4M+</div><div class="d">Alojamientos</div></div>
-                <div class="hstat"><div class="n">190+</div><div class="d">Países</div></div>
-                <div class="hstat"><div class="n">4.8★</div><div class="d">Rating</div></div>
-            </div>
-        </div>
-
-        <!-- HERO RIGHT: MAP AND PINS -->
-        <div class="hero-right" style="position:relative; overflow:hidden; background:var(--crd);">
-            <div style="position:absolute; inset:0; background:linear-gradient(165deg,#EDE9CC 0%,#E8E4C4 55%,#E2DCBA 100%)">
-                <div style="position:absolute; inset:0; background-image:radial-gradient(circle,rgba(47,47,47,.12) 1px,transparent 1px); background-size:22px 22px;"></div>
-                
-                <!-- Simplified World Map SVG -->
-                <svg style="position:absolute;inset:0;width:100%;height:100%" viewBox="0 0 420 700" preserveAspectRatio="xMidYMid meet" fill="none">
-                    <g fill="#C4B99A" opacity=".55">
-                        <path d="M10 80 L30 60 L130 110 L88 185 L80 175 Z"/> <!-- North America dummy -->
-                        <path d="M200 95 L240 115 L265 133 L200 108 Z"/> <!-- Europe dummy -->
-                        <path d="M195 148 L258 175 L232 295 L193 172 Z"/> <!-- Africa dummy -->
-                    </g>
-                    <!-- Animated Routes -->
-                    <path d="M404 97 Q360 70 302 135" stroke="#E07A5F" stroke-width="1.2" fill="none" stroke-dasharray="4 5" opacity=".55"/>
-                    <circle r="3" fill="#E07A5F"><animateMotion dur="4s" repeatCount="indefinite" path="M404 97 Q360 70 302 135"/></circle>
-                </svg>
-
-                <!-- Floating Pins -->
-                <div style="position:absolute; left:26%; top:21%; transform:translate(-50%,-100%); animation:pinBounce 4.2s ease-in-out infinite;">
-                    <div style="width:24px;height:24px;background:var(--v);border-radius:50% 50% 50% 0;transform:rotate(-45deg);display:flex;align-items:center;justify-content:center">
-                        <div style="width:8px;height:8px;background:#fff;border-radius:50%;transform:rotate(45deg)"></div>
-                    </div>
-                    <div style="position:absolute;top:-30px;left:50%;transform:translateX(-50%);background:var(--g);color:#fff;font-size:9px;font-weight:700;padding:3px 9px;border-radius:100px;white-space:nowrap">Nueva York</div>
-                </div>
-
-                <div style="position:absolute; right:10%; bottom:15%; background:var(--wh); padding:20px; border-radius:20px; box-shadow:var(--shl); text-align:center;">
-                    <div style="font-family:'Fraunces',serif; font-size:20px; font-weight:700; color:var(--t);">190+ países</div>
-                    <div style="font-size:12px; color:var(--gm);">Tu nido te espera</div>
-                </div>
+            
+            <!-- STATS (IMAGE 1) -->
+            <div style="display:flex; justify-content:center; gap:48px; margin-top:48px">
+                <div style="text-align:center"><div style="font-family:'Fraunces',serif; font-size:36px; font-weight:800; color:#fff">2.4M+</div><div style="font-size:13px; color:#fff; opacity:0.8">Alojamientos</div></div>
+                <div style="text-align:center"><div style="font-family:'Fraunces',serif; font-size:36px; font-weight:800; color:#fff">190+</div><div style="font-size:13px; color:#fff; opacity:0.8">Países</div></div>
+                <div style="text-align:center"><div style="font-family:'Fraunces',serif; font-size:36px; font-weight:800; color:#fff">4.8★</div><div style="font-size:13px; color:#fff; opacity:0.8">Valoración</div></div>
+                <div style="text-align:center"><div style="font-family:'Fraunces',serif; font-size:36px; font-weight:800; color:#fff">24/7</div><div style="font-size:13px; color:#fff; opacity:0.8">Soporte</div></div>
             </div>
         </div>
     </section>
 
-    <!-- MARQUEE BAR -->
-    <div class="mq-wrap">
-        <div class="mq-track">
-            <span class="mq-item"><span class="mq-dot"></span>Madrid</span>
-            <span class="mq-item"><span class="mq-dot"></span>Barcelona</span>
-            <span class="mq-item"><span class="mq-dot"></span>Roma</span>
-            <span class="mq-item"><span class="mq-dot"></span>París</span>
-            <span class="mq-item"><span class="mq-dot"></span>Londres</span>
-            <span class="mq-item"><span class="mq-dot"></span>Tokio</span>
-            <span class="mq-item"><span class="mq-dot"></span>Madrid</span>
-            <span class="mq-item"><span class="mq-dot"></span>Barcelona</span>
-            <span class="mq-item"><span class="mq-dot"></span>Roma</span>
-            <span class="mq-item"><span class="mq-dot"></span>París</span>
-            <span class="mq-item"><span class="mq-dot"></span>Londres</span>
-            <span class="mq-item"><span class="mq-dot"></span>Tokio</span>
+    <!-- CITY MARQUEE ORANGE (IMAGE 2) -->
+    <div class="mq-orange">
+        <div class="mq-scroll">
+            <span class="mq-city">MADRID</span>
+            <span class="mq-city">BARCELONA</span>
+            <span class="mq-city">PARÍS</span>
+            <span class="mq-city">ROMA</span>
+            <span class="mq-city">LONDRES</span>
+            <span class="mq-city">TOKIO</span>
+            <span class="mq-city">CDMX</span>
+            <span class="mq-city">BERLÍN</span>
+            <span class="mq-city">AMSTERDAM</span>
+            <!-- Repeat -->
+            <span class="mq-city">MADRID</span>
+            <span class="mq-city">BARCELONA</span>
+            <span class="mq-city">PARÍS</span>
+            <span class="mq-city">ROMA</span>
         </div>
     </div>
 
-    <!-- HOW IT WORKS SECTION -->
-    <section class="home-sec hiw" id="how">
-        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:64px; align-items:center;">
-            <div class="reveal">
-                <div class="sec-tag">¿Cómo funciona Nestay?</div>
-                <h2 class="sec-h2">Busca, reserva y vive.<br><em style="font-family:'Instrument Serif',serif; font-style:italic; color:var(--t)">Así de sencillo.</em></h2>
-                
-                <div class="hiw-steps" style="margin-top:28px">
-                    <div class="step on">
-                        <div class="snum">1</div>
-                        <div class="stxt">
-                            <div class="sh">Escribe tu destino</div>
-                            <div class="sp">Nuestro motor busca en tiempo real entre 2.4M+ alojamientos.</div>
-                        </div>
-                    </div>
-                    <div class="step">
-                        <div class="snum">2</div>
-                        <div class="stxt">
-                            <div class="sh">Compara y filtra</div>
-                            <div class="sp">Precio, valoración o servicios. Elige el nido perfecto.</div>
-                        </div>
+    <!-- VALUE PROPOSITIONS BAR -->
+    <div class="prop-bar">
+        <div class="prop-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg> Pago 100% seguro</div>
+        <div class="prop-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg> Confirmación inmediata</div>
+        <div class="prop-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> Soporte 24/7</div>
+        <div class="prop-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1v22M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg> Mejor precio garantizado</div>
+        <div class="prop-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg> 2.4M+ alojamientos</div>
+    </div>
+
+    <!-- FEATURED ACCOMODATIONS (IMAGE 2 REPLICA) -->
+    <section style="padding: 100px 64px; background: var(--cr);">
+        <div style="display:flex; justify-content:space-between; align-items:flex-end; margin-bottom:48px">
+            <div>
+                <span style="background:var(--tp); color:var(--t); padding:5px 12px; border-radius:100px; font-size:10px; font-weight:800; letter-spacing:1px">ALOJAMIENTOS DESTACADOS</span>
+                <h2 style="font-family:'Fraunces',serif; font-size:48px; font-weight:800; color:var(--v); margin-top:12px">Los más reservados ahora</h2>
+            </div>
+            <a style="font-size:14px; font-weight:700; color:var(--gm); cursor:pointer">Ver todos →</a>
+        </div>
+
+        <div style="display:grid; grid-template-columns: repeat(4, 1fr); gap:24px">
+            <!-- CARD 1 -->
+            <div class="pcard-mix">
+                <div class="p-img-box" style="background:#F2DED4">🏨</div>
+                <div class="p-body">
+                    <div class="p-loc">📍 Madrid, España</div>
+                    <h4 class="p-name">Hotel Palacio Gran Vía</h4>
+                    <div class="p-price">Desde <strong>€149</strong> / noche</div>
+                    <div class="p-footer">
+                        <span class="p-tag">Hotel 5★</span>
+                        <span class="p-rate">⭐ 4.9</span>
                     </div>
                 </div>
             </div>
-            <div class="phone-wrap reveal d2">
-                <div class="phone">
-                    <div class="p-notch"><div class="p-notch-d"></div></div>
-                    <div class="p-screen">
-                        <div class="p-title">📍 Madrid</div>
-                        <div class="p-result">
-                            <div class="rcard-img" style="height:40px; font-size:16px;">🏨</div>
-                            <div>
-                                <div style="font-size:11px; font-weight:700;">Palacio Gran Vía</div>
-                                <div style="font-size:10px; color:var(--t);">€149/noche</div>
-                            </div>
-                        </div>
+            <!-- CARD 2 -->
+            <div class="pcard-mix">
+                <div class="p-img-box" style="background:#D4EBF2">🌊</div>
+                <div class="p-body">
+                    <div class="p-loc">📍 Barcelona</div>
+                    <h4 class="p-name">Aptos. Mar Barceloneta</h4>
+                    <div class="p-price">Desde <strong>€112</strong> / noche</div>
+                    <div class="p-footer">
+                        <span class="p-tag" style="background:#FFF1EF; color:#EE6C4D; border-color:#FFDED8">🔥 OFERTA</span>
+                        <span class="p-rate">⭐ 4.7</span>
+                    </div>
+                </div>
+            </div>
+            <!-- CARD 3 -->
+            <div class="pcard-mix">
+                <div class="p-img-box" style="background:#F2E4D4">☀️</div>
+                <div class="p-body">
+                    <div class="p-loc">📍 Málaga</div>
+                    <h4 class="p-name">Villa Mediterránea</h4>
+                    <div class="p-price">Desde <strong>€195</strong> / noche</div>
+                    <div class="p-footer">
+                        <span class="p-tag">Villa · Piscina</span>
+                        <span class="p-rate">⭐ 5.0</span>
+                    </div>
+                </div>
+            </div>
+            <!-- CARD 4 -->
+            <div class="pcard-mix">
+                <div class="p-img-box" style="background:#EBF2D4">🌿</div>
+                <div class="p-body">
+                    <div class="p-loc">📍 Sierra Nevada</div>
+                    <h4 class="p-name">Casa Rural Sierra</h4>
+                    <div class="p-price">Desde <strong>€78</strong> / noche</div>
+                    <div class="p-footer">
+                        <span class="p-tag" style="background:#FFF1EF; color:#EE6C4D; border-color:#FFDED8">🔥 OFERTA</span>
+                        <span class="p-rate">⭐ 4.8</span>
                     </div>
                 </div>
             </div>
         </div>
     </section>
 
-    <!-- DESTINATIONS -->
-    <section class="home-sec" id="destinations">
+
+    <!-- HOW IT WORKS (IMAGE 3) -->
+    <section class="hiw-mix" id="how">
         <div class="reveal">
-            <div class="sec-tag">Explora el mundo</div>
-            <h2 class="sec-h2">Viaja a donde siempre<br>has soñado ir</h2>
+            <span class="hiw-tag">¿Cómo funciona Nestay?</span>
+            <h2 class="hiw-h2">Busca, reserva y vive.<br><em style="font-family:'Instrument Serif',serif; font-style:italic; color:var(--t)">Así de sencillo.</em></h2>
+            
+            <div class="hiw-step on">
+                <div class="h-num">1</div>
+                <div class="h-body">
+                    <div class="h-title">Escribe tu destino</div>
+                    <p class="h-desc">Ciudad, país o región. Nuestro motor busca en tiempo real entre 2.4M+ alojamientos verificados en 190+ países.</p>
+                </div>
+            </div>
+            <div class="hiw-step">
+                <div class="h-num">2</div>
+                <div class="h-body">
+                    <div class="h-title">Compara y filtra</div>
+                    <p class="h-desc">Precio, categoría, valoración o amenities. Ve fotos reales y reseñas verificadas antes de decidir.</p>
+                </div>
+            </div>
+            <div class="hiw-step">
+                <div class="h-num">3</div>
+                <div class="h-body">
+                    <div class="h-title">Reserva con garantía</div>
+                    <p class="h-desc">Pago seguro, confirmación inmediata, bono en tu email. Sin comisiones ocultas. Tu nido, garantizado.</p>
+                </div>
+            </div>
         </div>
-        <div class="dest-grid reveal d2">
-            <div class="dcard">
-                <div class="dbg">🌊</div>
-                <div class="dov"></div>
-                <div class="dcont"><div class="dcat">Escapada</div><div class="dname">Playa</div></div>
+
+        <!-- PHONE MOCKUP (IMAGE 3) -->
+        <div class="reveal d2" style="position:relative">
+            <div style="background:var(--wh); border-radius:40px; border:8px solid #333; height:500px; width:260px; margin:0 auto; overflow:hidden; box-shadow:var(--shl); position:relative">
+                <div style="background:#000; height:20px; width:120px; border-radius:0 0 12px 12px; margin:0 auto"></div>
+                <!-- Mockup Content -->
+                <div style="padding:20px">
+                    <div style="display:flex; align-items:center; gap:8px; margin-bottom:16px">
+                        <span style="font-size:18px">🌍</span>
+                        <div style="font-size:11px; font-weight:700">Destino</div>
+                    </div>
+                    <div style="background:var(--tp); border:1px solid var(--tl); border-radius:12px; padding:12px; margin-bottom:12px">
+                        <div style="font-size:12px; font-weight:700">🔍 Roma, Italia</div>
+                    </div>
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px">
+                        <div style="background:var(--tp); border-radius:10px; padding:10px; font-size:10px">LLEGADA<br><strong>15 Ago</strong></div>
+                        <div style="background:var(--tp); border-radius:10px; padding:10px; font-size:10px">SALIDA<br><strong>18 Ago</strong></div>
+                    </div>
+                    <div style="margin-top:12px; background:var(--tp); border-radius:10px; padding:10px; font-size:10px">2 huéspedes · 1 hab.</div>
+                    <button style="margin-top:20px; width:100%; background:var(--t); color:#fff; border:none; border-radius:10px; padding:12px; font-size:12px; font-weight:700">Buscar nidos →</button>
+                </div>
             </div>
-            <div class="dcard">
-                <div class="dbg">🏙️</div>
-                <div class="dov"></div>
-                <div class="dcont"><div class="dcat">Urbana</div><div class="dname">Ciudad</div></div>
+        </div>
+    </section>
+
+    <!-- EXPLORE THE WORLD (IMAGE 4) -->
+    <section class="dest-mix" id="destinations">
+        <h2 class="dest-h2">Viaja a donde siempre<br>has soñado ir</h2>
+        
+        <div class="dgrid-mix">
+            <div class="dcard-mix c1">
+                <div class="d-icon">🌊</div>
+                <div class="d-tag">Escapada</div>
+                <div class="d-name">Playa</div>
+                <div class="d-meta">4.200+ alojamientos</div>
             </div>
-            <div class="dcard">
-                <div class="dbg">🏔️</div>
-                <div class="dov"></div>
-                <div class="dcont"><div class="dcat">Relax</div><div class="dname">Montaña</div></div>
+            <div class="dcard-mix c2">
+                <div class="d-icon">🏙️</div>
+                <div class="d-tag">Urbana</div>
+                <div class="d-name">Ciudad</div>
+                <div class="d-meta">12.800+ alojamientos</div>
+            </div>
+            <div class="dcard-mix c3">
+                <div class="d-icon">🏔️</div>
+                <div class="d-tag">Aventura</div>
+                <div class="d-name">Montaña</div>
+                <div class="d-meta">2.100+ alojamientos</div>
+            </div>
+            <div class="dcard-mix c4">
+                <div class="d-icon">🌾</div>
+                <div class="d-tag">Relax</div>
+                <div class="d-name">Rural</div>
+                <div class="d-meta">1.400+ alojamientos</div>
             </div>
         </div>
     </section>
@@ -226,18 +272,31 @@
 </div>
 
 <script>
+    const SearchMix = {
+        toggleGuest() {
+            document.getElementById('guest-hub-panel').classList.toggle('active');
+        },
+        adjust(type, val) {
+            const input = document.getElementById(`${type}-input`);
+            const display = document.getElementById(`hub-${type}`);
+            let curr = parseInt(input.value);
+            curr = Math.max(1, curr + val);
+            input.value = curr;
+            display.innerText = curr;
+            this.updateSummary();
+        },
+        updateSummary() {
+            const a = document.getElementById('adults-input').value;
+            const r = document.getElementById('rooms-input').value;
+            document.getElementById('guest-summary').innerText = `${a} adultos · ${r} ${r==1?'hab':'habs'}`;
+        }
+    };
+
     document.addEventListener('DOMContentLoaded', () => {
-        // Init Hero Autocomplete
-        SearchModule.initAutocomplete('dest', 'autocomplete-results');
-
-        // Reveal animations observer
-        const observer = new IntersectionObserver((entries) => {
-            entries.forEach(entry => {
-                if (entry.isIntersecting) entry.target.classList.add('vis');
-            });
-        }, { threshold: 0.1 });
-
-        document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+        const obs = new IntersectionObserver((es) => {
+            es.forEach(e => { if(e.isIntersecting) e.target.classList.add('vis'); });
+        }, {threshold: 0.1});
+        document.querySelectorAll('.reveal').forEach(x => obs.observe(x));
     });
 </script>
 @endsection
