@@ -115,5 +115,10 @@
         function showLoader() { document.getElementById('loader-overlay').classList.add('show'); }
         function hideLoader() { document.getElementById('loader-overlay').classList.remove('show'); }
     </script>
+
+    <!-- CUSTOM CURSOR ELEMENTS -->
+    <div id="cursor"></div>
+    <div id="cursor-ring"></div>
 </body>
+
 </html>
