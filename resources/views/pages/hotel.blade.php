@@ -97,10 +97,11 @@
         async init() {
             const params = new URLSearchParams(window.location.search);
             try {
-                const response = await NestayAPI.hotelDetails(this.id, {
-                    check_in: params.get('check_in'),
-                    check_out: params.get('check_out'),
-                    adults: parseInt(params.get('adults')) || 2
+                const response = await NestayAPI.getHotelDetails({
+                    hotel_id:  this.id,
+                    checkin:   params.get('check_in'),
+                    checkout:  params.get('check_out'),
+                    adults:    parseInt(params.get('adults')) || 2,
                 });
                 this.data = response.data;
                 this.render();

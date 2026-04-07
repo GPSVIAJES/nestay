@@ -30,24 +30,28 @@ class BookingService
     }
 
     /**
-     * Start the booking process.
-     * Saves to local DB after confirmation.
+     * START the booking process (async step 1).
+     * ETG processes bookings asynchronously — this call only initiates
+     * the booking. The actual confirmation comes via polling (pollBookingStatus).
+     *
+     * Saves the booking to DB with status = 'pending'.
+     * Returns the order_id so the frontend can poll for status.
      */
     public function startBooking(array $data, int $userId): array
     {
         if (config('ratehawk.use_mock')) {
-            Log::info('[RateHawk:MOCK] startBooking', ['guest' => $data['guest']['email'] ?? '']);
+            Log::info('[RateHawk:MOCK] startBooking (async start)', ['guest' => $data['guest']['email'] ?? '']);
 
-            $result = BookingResult::get($data);
+            $result = BookingResult::startMock($data);
 
-            if ($result['status'] === 'ok') {
-                $this->saveBooking($result['data'], $data, $userId);
+            if (in_array($result['status'], ['ok', 'processing'])) {
+                $this->saveBooking($result['data'], $data, $userId, 'pending');
             }
 
             return $result;
         }
 
-        // Real API call
+        // Real ETG API — Start async booking process
         $payload = [
             'book_hash' => $data['book_hash'],
             'user_data' => [
@@ -56,32 +60,31 @@ class BookingService
                 'first_name' => $data['guest']['first_name'],
                 'last_name'  => $data['guest']['last_name'],
             ],
-            'language'  => config('ratehawk.language', 'en'),
+            'language' => config('ratehawk.language', 'en'),
         ];
 
-        $result = $this->client->post('api/b2b/v3/order/order_id/', $payload);
+        $result = $this->client->post('api/b2b/v3/hotel/order/booking/start/', $payload);
 
-        if (($result['status'] ?? '') === 'ok') {
-            $this->saveBooking($result['data'], $data, $userId);
+        if (!empty($result['data']['order_id'])) {
+            $this->saveBooking($result['data'], $data, $userId, 'pending');
         }
 
         return $result;
     }
 
     /**
-     * Check the status of a booking by order ID.
+     * POLL the booking status (async step 2).
+     * Call this repeatedly until status is 'confirmed' or 'failed'.
+     * ETG recommends polling every 2–5 seconds for up to 60 seconds.
      */
-    public function getBookingStatus(string $orderId): array
+    public function pollBookingStatus(string $orderId): array
     {
         if (config('ratehawk.use_mock')) {
-            Log::info('[RateHawk:MOCK] getBookingStatus', ['order_id' => $orderId]);
-            return [
-                'status' => 'ok',
-                'data'   => ['order_id' => $orderId, 'status' => 'confirmed'],
-            ];
+            Log::info('[RateHawk:MOCK] pollBookingStatus', ['order_id' => $orderId]);
+            return BookingResult::pollMock($orderId);
         }
 
-        return $this->client->get("api/b2b/v3/order/order_id/{$orderId}/");
+        return $this->client->get("api/b2b/v3/hotel/order/booking/finish/{$orderId}/");
     }
 
     /**
@@ -97,9 +100,24 @@ class BookingService
     }
 
     /**
-     * Save confirmed booking to local database.
+     * Cancel a booking — calls the ETG API first, then the caller updates local DB.
      */
-    protected function saveBooking(array $apiData, array $inputData, int $userId): void
+    public function cancelBookingViaApi(Booking $booking): array
+    {
+        if (config('ratehawk.use_mock')) {
+            Log::info('[RateHawk:MOCK] cancelBooking', ['order_id' => $booking->ratehawk_order_id]);
+            return ['status' => 'ok', 'data' => ['order_id' => $booking->ratehawk_order_id, 'status' => 'cancelled']];
+        }
+
+        return $this->client->post('api/b2b/v3/hotel/order/cancel/', [
+            'order_id' => $booking->ratehawk_order_id,
+        ]);
+    }
+
+    /**
+     * Save a booking record to the local database.
+     */
+    protected function saveBooking(array $apiData, array $inputData, int $userId, string $initialStatus = 'pending'): void
     {
         try {
             Booking::create([
@@ -107,7 +125,7 @@ class BookingService
                 'ratehawk_order_id'   => $apiData['order_id'],
                 'book_hash'           => $inputData['book_hash'],
                 'hotel_id'            => $apiData['hotel']['id']      ?? $inputData['hotel_id'] ?? '',
-                'hotel_name'          => $apiData['hotel']['name']    ?? '',
+                'hotel_name'          => $apiData['hotel']['name']    ?? $inputData['hotel_name'] ?? '',
                 'hotel_address'       => $apiData['hotel']['address'] ?? '',
                 'hotel_city'          => $inputData['hotel_city']     ?? '',
                 'hotel_country'       => $inputData['hotel_country']  ?? '',
@@ -118,17 +136,20 @@ class BookingService
                 'guests'              => $inputData['guests']            ?? 1,
                 'rooms'               => 1,
                 'rooms_data'          => json_encode($apiData['rate']    ?? []),
-                'total_price'         => $apiData['rate']['total_price'] ?? 0,
+                'total_price'         => $apiData['rate']['total_price'] ?? $inputData['total_price'] ?? 0,
                 'currency'            => $apiData['rate']['currency']    ?? 'USD',
                 'guest_first_name'    => $inputData['guest']['first_name'],
                 'guest_last_name'     => $inputData['guest']['last_name'],
                 'guest_email'         => $inputData['guest']['email'],
                 'guest_phone'         => $inputData['guest']['phone']    ?? '',
-                'status'              => $apiData['status']              ?? 'confirmed',
+                'status'              => $initialStatus,
                 'cancellation_policy' => $inputData['cancellation_policy'] ?? '',
             ]);
 
-            Log::info('[RateHawk] Booking saved to DB', ['order_id' => $apiData['order_id']]);
+            Log::info('[RateHawk] Booking saved to DB', [
+                'order_id' => $apiData['order_id'],
+                'status'   => $initialStatus,
+            ]);
         } catch (\Exception $e) {
             Log::error('[RateHawk] Failed to save booking', ['error' => $e->getMessage()]);
         }

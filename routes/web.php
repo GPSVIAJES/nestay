@@ -15,7 +15,7 @@ Route::get('/hotel/{id}',   [HotelController::class, 'show'])->name('hotel.show'
 Route::middleware('auth')->group(function () {
     Route::get('/booking',              [BookingPageController::class, 'form'])->name('booking.form');
     Route::get('/booking/{id}/confirm', [BookingPageController::class, 'confirm'])->name('booking.confirm');
-    Route::get('/booking/{id}/voucher', [BookingPageController::class, 'voucher'])->name('booking.voucher');
+    // /booking/{id}/voucher — will be added once ETG voucher API is integrated
 });
 
 // ─── Dashboard & Profile (auth required) ──────────────────────────────────────

@@ -49,7 +49,7 @@ export const NestayAPI = {
     searchHotels: (params) => 
         fetchWrap('search-hotels', { method: 'POST', body: JSON.stringify(params) }),
 
-    getHotelDetails: (params) => 
+    getHotelDetails: (params) =>
         fetchWrap('hotel-details', { method: 'POST', body: JSON.stringify(params) }),
 
     // Booking Flow

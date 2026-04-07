@@ -52,16 +52,16 @@ class Booking extends Model
     }
 
     /**
-     * Get status CSS color class.
+     * Get status CSS inline style (uses project design system variables).
      */
     public function getStatusColorAttribute(): string
     {
         return match($this->status) {
-            'confirmed' => 'text-green-600',
-            'pending'   => 'text-amber-600',
-            'cancelled' => 'text-red-600',
-            'failed'    => 'text-red-800',
-            default     => 'text-gray-600',
+            'confirmed' => 'color:#4caf7d; font-weight:700;',
+            'pending'   => 'color:#f59e0b; font-weight:700;',
+            'cancelled' => 'color:#ef4444; font-weight:700;',
+            'failed'    => 'color:#b91c1c; font-weight:700;',
+            default     => 'color:var(--gl); font-weight:600;',
         };
     }
 
