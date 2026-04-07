@@ -22,8 +22,9 @@
                 <path d="M12 20C12 20 14.5 14 19 14C23.5 14 26 20 26 20" stroke="rgba(255,255,255,0.3)" stroke-width="1.6" fill="none" stroke-linecap="round"/>
                 <circle cx="19" cy="24" r="5.8" fill="white"/>
             </svg>
-            <span style="color:var(--v)">Nestay</span>
+            <span>Nestay</span>
         </a>
+
 
         <ul class="nav-links">
             <li><a href="{{ route('home') }}">Inicio</a></li>
