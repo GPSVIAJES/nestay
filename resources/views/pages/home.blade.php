@@ -80,33 +80,42 @@
             
             <!-- STATS (IMAGE 1) -->
             <div style="display:flex; justify-content:center; gap:48px; margin-top:48px">
-                <div style="text-align:center"><div style="font-family:'Fraunces',serif; font-size:36px; font-weight:800; color:#fff">2.4M+</div><div style="font-size:13px; color:#fff; opacity:0.8">Alojamientos</div></div>
-                <div style="text-align:center"><div style="font-family:'Fraunces',serif; font-size:36px; font-weight:800; color:#fff">190+</div><div style="font-size:13px; color:#fff; opacity:0.8">Países</div></div>
-                <div style="text-align:center"><div style="font-family:'Fraunces',serif; font-size:36px; font-weight:800; color:#fff">4.8★</div><div style="font-size:13px; color:#fff; opacity:0.8">Valoración</div></div>
-                <div style="text-align:center"><div style="font-family:'Fraunces',serif; font-size:36px; font-weight:800; color:#fff">24/7</div><div style="font-size:13px; color:#fff; opacity:0.8">Soporte</div></div>
+                <div style="text-align:center"><div style="font-family:'DM Sans',serif; font-size:36px; font-weight:800; color:#fff">2.4M+</div><div style="font-size:13px; color:#fff; opacity:0.8">Alojamientos</div></div>
+                <div style="text-align:center"><div style="font-family:'DM Sans',serif; font-size:36px; font-weight:800; color:#fff">190+</div><div style="font-size:13px; color:#fff; opacity:0.8">Países</div></div>
+                <div style="text-align:center"><div style="font-family:'DM Sans',serif; font-size:36px; font-weight:800; color:#fff">4.8★</div><div style="font-size:13px; color:#fff; opacity:0.8">Valoración</div></div>
+                <div style="text-align:center"><div style="font-family:'DM Sans',serif; font-size:36px; font-weight:800; color:#fff">24/7</div><div style="font-size:13px; color:#fff; opacity:0.8">Soporte</div></div>
+            </div>
+        </div>
+
+        <!-- CITY MARQUEE NOW INSIDE HERO (IMAGE 2) -->
+        <div class="mq-orange">
+            <div class="mq-scroll">
+                <span class="mq-city">MADRID</span>
+                <span class="mq-city">BARCELONA</span>
+                <span class="mq-city">PARÍS</span>
+                <span class="mq-city">ROMA</span>
+                <span class="mq-city">LONDRES</span>
+                <span class="mq-city">TOKIO</span>
+                <span class="mq-city">CDMX</span>
+                <span class="mq-city">BERLÍN</span>
+                <span class="mq-city">AMSTERDAM</span>
+                <span class="mq-city">NUEVA YORK</span>
+                <span class="mq-city">MILÁN</span>
+                <span class="mq-city">MADRID</span>
+                <span class="mq-city">BARCELONA</span>
+                <span class="mq-city">PARÍS</span>
+                <span class="mq-city">ROMA</span>
+                <span class="mq-city">LONDRES</span>
+                <span class="mq-city">TOKIO</span>
+                <span class="mq-city">CDMX</span>
+                <span class="mq-city">BERLÍN</span>
+                <span class="mq-city">AMSTERDAM</span>
+                <span class="mq-city">NUEVA YORK</span>
+                <span class="mq-city">MILÁN</span>
             </div>
         </div>
     </section>
 
-    <!-- CITY MARQUEE ORANGE (IMAGE 2) -->
-    <div class="mq-orange">
-        <div class="mq-scroll">
-            <span class="mq-city">MADRID</span>
-            <span class="mq-city">BARCELONA</span>
-            <span class="mq-city">PARÍS</span>
-            <span class="mq-city">ROMA</span>
-            <span class="mq-city">LONDRES</span>
-            <span class="mq-city">TOKIO</span>
-            <span class="mq-city">CDMX</span>
-            <span class="mq-city">BERLÍN</span>
-            <span class="mq-city">AMSTERDAM</span>
-            <!-- Repeat -->
-            <span class="mq-city">MADRID</span>
-            <span class="mq-city">BARCELONA</span>
-            <span class="mq-city">PARÍS</span>
-            <span class="mq-city">ROMA</span>
-        </div>
-    </div>
 
     <!-- VALUE PROPOSITIONS BAR -->
     <div class="prop-bar">
