@@ -91,7 +91,7 @@
             </div>
         </div>
         <div style="display:flex; justify-content:space-between; align-items:center; padding-top:32px; font-size:13px; opacity:0.3">
-            <div>© {{ date('Y') }} Nestay Corporation. Todos los derechos reservados.</div>
+            <div style="font-size: 15px; font-weight: bold;">Powered by Viajes GPS | 7 años diseñando experiencias a medida.</div>
             <div style="display:flex; gap:24px">
                 <a>Instagram</a>
                 <a>LinkedIn</a>
