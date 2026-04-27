@@ -26,11 +26,17 @@
         </a>
 
 
-        <ul class="nav-links">
-            <li><a href="{{ route('home') }}">Inicio</a></li>
-            <li><a href="#how">Cómo funciona</a></li>
-            <li><a href="#destinations">Explorar</a></li>
-        </ul>
+        @hasSection('header_search')
+            <div class="nav-search-wrapper" style="justify-self: center; width: 100%; max-width: 800px;">
+                @yield('header_search')
+            </div>
+        @else
+            <ul class="nav-links">
+                <li><a href="{{ route('home') }}">Inicio</a></li>
+                <li><a href="#how">Cómo funciona</a></li>
+                <li><a href="#destinations">Explorar</a></li>
+            </ul>
+        @endif
 
         <div class="nav-right" style="display:flex; gap:12px">
             @auth
@@ -116,9 +122,7 @@
         function hideLoader() { document.getElementById('loader-overlay').classList.remove('show'); }
     </script>
 
-    <!-- CUSTOM CURSOR ELEMENTS -->
-    <div id="cursor"></div>
-    <div id="cursor-ring"></div>
+    <!-- CUSTOM CURSOR REMOVED -->
 </body>
 
 </html>

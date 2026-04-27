@@ -11,10 +11,12 @@ Route::get('/',             [HotelController::class, 'home'])->name('home');
 Route::get('/search',       [HotelController::class, 'results'])->name('search');
 Route::get('/hotel/{id}',   [HotelController::class, 'show'])->name('hotel.show');
 
-// ─── Booking flow (auth required) ─────────────────────────────────────────────
+// ─── Booking flow (public) ─────────────────────────────────────────────
+Route::get('/booking',              [BookingPageController::class, 'form'])->name('booking.form');
+Route::get('/booking/{id}/confirm', [BookingPageController::class, 'confirm'])->name('booking.confirm');
+
+// ─── Protected pages ─────────────────────────────────────────────
 Route::middleware('auth')->group(function () {
-    Route::get('/booking',              [BookingPageController::class, 'form'])->name('booking.form');
-    Route::get('/booking/{id}/confirm', [BookingPageController::class, 'confirm'])->name('booking.confirm');
     // /booking/{id}/voucher — will be added once ETG voucher API is integrated
 });
 

@@ -23,29 +23,37 @@
                         <button class="stab-mix">Villas</button>
                     </div>
 
-                    <form action="{{ route('search') }}" method="GET" onsubmit="showLoader()">
+                    <form action="{{ route('search') }}" method="GET" onsubmit="return SearchMix.validateSearch(event)">
                         <div class="sfields-mix">
-                            <div class="sf-box">
+                            <div class="sf-box" style="position:relative;">
                                 <label class="sf-label">
                                     <svg class="sf-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
                                     Destino
                                 </label>
                                 <input type="text" name="destination" id="dest" class="sf-val"
-                                    placeholder="¿Dónde vas?" required autocomplete="off">
+                                    placeholder="¿Dónde vas?" required autocomplete="off"
+                                    oninput="SearchMix.onDestInput(this.value)">
+                                <input type="hidden" name="region_id" id="region-id-input" value="">
+                                <div id="dest-suggestions" style="display:none; position:absolute; top:100%; left:0; right:0; background:#fff; border-radius:14px; box-shadow:0 8px 32px rgba(0,0,0,0.12); z-index:9999; overflow:hidden; margin-top:6px; border:1px solid rgba(47,47,47,.08);"></div>
                             </div>
                             <div class="sf-box">
                                 <label class="sf-label">
                                     <svg class="sf-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
                                     Fecha de Inicio
                                 </label>
-                                <input type="text" onfocus="(this.type='date')" onblur="(this.type=this.value?'date':'text')" name="check_in" id="cin" class="sf-val" placeholder="Añade una fecha" required>
+                                <input type="text" onfocus="(this.type='date')" onblur="(this.type=this.value?'date':'text')"
+                                    name="check_in" id="cin" class="sf-val" placeholder="Añade una fecha" required
+                                    min="{{ date('Y-m-d') }}"
+                                    onchange="SearchMix.onCheckinChange(this.value)">
                             </div>
                             <div class="sf-box">
                                 <label class="sf-label">
                                     <svg class="sf-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
                                     Fecha Final
                                 </label>
-                                <input type="text" onfocus="(this.type='date')" onblur="(this.type=this.value?'date':'text')" name="check_out" id="cout" class="sf-val" placeholder="Añade una fecha" required>
+                                <input type="text" onfocus="(this.type='date')" onblur="(this.type=this.value?'date':'text')"
+                                    name="check_out" id="cout" class="sf-val" placeholder="Añade una fecha" required
+                                    min="{{ date('Y-m-d', strtotime('+1 day')) }}">
                             </div>
                             <!-- Huéspedes Dropdown -->
                             <div class="sf-box sf-box-guest" style="position: relative;">
@@ -54,7 +62,7 @@
                                         <svg class="sf-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
                                         Huéspedes
                                     </label>
-                                    <div class="sf-val empty-styled" id="guest-summary">Añadir huéspedes</div>
+                                    <div class="sf-val" id="guest-summary">2 adultos · 1 hab</div>
                                     <input type="hidden" name="adults" id="adults-input" value="2">
                                     <input type="hidden" name="children" id="children-input" value="0">
                                     <input type="hidden" name="rooms" id="rooms-input" value="1">
@@ -825,6 +833,82 @@
                 const summaryEl = document.getElementById('guest-summary');
                 summaryEl.innerText = summary;
                 summaryEl.classList.remove('empty-styled');
+            },
+
+            // ── DESTINATION AUTOCOMPLETE ──
+            _destTimer: null,
+            onDestInput(val) {
+                const box = document.getElementById('dest-suggestions');
+                clearTimeout(this._destTimer);
+                document.getElementById('region-id-input').value = '';
+                if (val.length < 3) { box.style.display = 'none'; return; }
+                this._destTimer = setTimeout(() => this.fetchSuggestions(val), 300);
+            },
+
+            async fetchSuggestions(query) {
+                const box = document.getElementById('dest-suggestions');
+                try {
+                    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+                    const res = await fetch('/api/suggest', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', 'X-CSRF-TOKEN': csrfToken },
+                        body: JSON.stringify({ q: query, language: 'es' })
+                    });
+                    const data = await res.json();
+                    const items = data?.data || [];
+                    if (!items.length) { box.style.display = 'none'; return; }
+                    box.innerHTML = items.slice(0, 7).map(item => `
+                        <div style="padding:12px 16px; cursor:pointer; display:flex; align-items:center; gap:10px; border-bottom:1px solid rgba(47,47,47,.05); transition:background .15s;"
+                             onmouseenter="this.style.background='#fdf3f0'" onmouseleave="this.style.background=''" 
+                             onclick="SearchMix.selectDestination(${item.id}, '${(item.name || item.full_name || '').replace(/'/g, '\\&apos;')}', '${(item.country_name || item.country || '').replace(/'/g, '\\&apos;')}')">
+                            <span style="font-size:18px;">${item.type === 'hotel' ? '🏨' : '📍'}</span>
+                            <div>
+                                <div style="font-size:13.5px; font-weight:600; color:#2f2f2f;">${item.name || item.full_name}</div>
+                                <div style="font-size:11px; color:#9a9a9a;">${item.country_name || item.country || ''} · ${item.type === 'region' ? (item.hotels_count || '') + ' hoteles' : 'Hotel'}</div>
+                            </div>
+                        </div>
+                    `).join('');
+                    box.style.display = 'block';
+                } catch(e) {
+                    console.error('[Nestay] Autocomplete error:', e);
+                }
+            },
+
+            selectDestination(id, name, country) {
+                document.getElementById('dest').value = name + (country ? ', ' + country : '');
+                document.getElementById('region-id-input').value = id;
+                document.getElementById('dest-suggestions').style.display = 'none';
+            },
+
+            // Update checkout min when checkin changes
+            onCheckinChange(val) {
+                if (!val) return;
+                const nextDay = new Date(val);
+                nextDay.setDate(nextDay.getDate() + 1);
+                const minOut = nextDay.toISOString().split('T')[0];
+                const cout = document.getElementById('cout');
+                if (cout) {
+                    cout.min = minOut;
+                    // If checkout is now before checkin, reset it
+                    if (cout.value && cout.value <= val) {
+                        cout.value = minOut;
+                    }
+                }
+            },
+
+            validateSearch(e) {
+                const regionId = document.getElementById('region-id-input').value;
+                if (!regionId) {
+                    e.preventDefault();
+                    const input = document.getElementById('dest');
+                    input.style.borderColor = 'var(--t)';
+                    input.placeholder = '⚠ Selecciona un destino de la lista';
+                    input.focus();
+                    setTimeout(() => { input.style.borderColor = ''; input.placeholder = '¿Dónde vas?'; }, 3000);
+                    return false;
+                }
+                showLoader();
+                return true;
             }
         };
 
@@ -855,6 +939,15 @@
                     goToScreen((current + 1) % total);
                 }, 3000);
             }
+
+            // ── CLOSE SUGGESTIONS ON OUTSIDE CLICK ──
+            document.addEventListener('click', (e) => {
+                const box = document.getElementById('dest-suggestions');
+                const input = document.getElementById('dest');
+                if (box && !box.contains(e.target) && e.target !== input) {
+                    box.style.display = 'none';
+                }
+            });
         });
     </script>
 @endsection

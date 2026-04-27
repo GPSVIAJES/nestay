@@ -1,0 +1,889 @@
+
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=Playfair+Display:ital,wght@0,700;1,600&display=swap');
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  .page {
+    font-family: 'DM Sans', sans-serif;
+    background: #f5f3f0;
+    min-height: 100vh;
+    color: #1a1a1a;
+  }
+
+  .topbar {
+    background: #1c1c1c;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 0 28px;
+    height: 58px;
+    justify-content: space-between;
+  }
+
+  .logo {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: #fff;
+    font-weight: 600;
+    font-size: 16px;
+    letter-spacing: -0.3px;
+  }
+
+  .logo-icon {
+    width: 28px;
+    height: 28px;
+    background: #e85d2f;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .topbar-search {
+    flex: 1;
+    max-width: 520px;
+    margin: 0 auto;
+  }
+
+  .topbar-search input {
+    width: 100%;
+    background: #2e2e2e;
+    border: none;
+    border-radius: 10px;
+    padding: 9px 16px;
+    color: #fff;
+    font-size: 13px;
+    outline: none;
+  }
+
+  .topbar-search input::placeholder { color: #888; }
+
+  .btn-unirse {
+    background: #e85d2f;
+    color: #fff;
+    border: none;
+    border-radius: 10px;
+    padding: 8px 18px;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+  }
+
+  .search-meta {
+    background: #fff;
+    border-bottom: 0.5px solid #e0ddd8;
+    padding: 10px 28px;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    font-size: 13px;
+    color: #666;
+  }
+
+  .search-meta strong { color: #1a1a1a; }
+
+  .tag {
+    background: #fdf0eb;
+    color: #c44a1f;
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.3px;
+  }
+
+  .layout {
+    display: flex;
+    gap: 0;
+    align-items: flex-start;
+  }
+
+  .sidebar {
+    width: 220px;
+    flex-shrink: 0;
+    background: #fff;
+    min-height: calc(100vh - 100px);
+    border-right: 0.5px solid #e0ddd8;
+    padding: 20px 16px;
+  }
+
+  .sidebar h3 {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: #999;
+    margin-bottom: 12px;
+    margin-top: 20px;
+    font-weight: 500;
+  }
+
+  .sidebar h3:first-child { margin-top: 0; }
+
+  .price-range-label {
+    font-size: 13px;
+    color: #e85d2f;
+    font-weight: 600;
+    margin-bottom: 6px;
+  }
+
+  .price-ends {
+    display: flex;
+    justify-content: space-between;
+    font-size: 11px;
+    color: #999;
+    margin-top: 4px;
+  }
+
+  input[type=range] {
+    width: 100%;
+    accent-color: #e85d2f;
+    height: 3px;
+  }
+
+  .star-opt {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    font-size: 13px;
+    color: #444;
+    margin-bottom: 8px;
+    cursor: pointer;
+  }
+
+  .star-opt input { accent-color: #e85d2f; }
+
+  .stars { color: #e85d2f; font-size: 11px; }
+
+  .btn-clear {
+    width: 100%;
+    margin-top: 20px;
+    border: 1px solid #e85d2f;
+    background: none;
+    color: #e85d2f;
+    border-radius: 8px;
+    padding: 8px;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+  }
+
+  .amenity-opt {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    font-size: 13px;
+    color: #444;
+    margin-bottom: 8px;
+    cursor: pointer;
+  }
+
+  .amenity-opt input { accent-color: #e85d2f; }
+
+  .results-area {
+    flex: 1;
+    padding: 20px 24px;
+  }
+
+  .results-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 16px;
+  }
+
+  .results-count {
+    font-size: 14px;
+    color: #666;
+  }
+
+  .results-count strong { color: #1a1a1a; }
+
+  .sort-select {
+    font-size: 13px;
+    border: 0.5px solid #ddd;
+    border-radius: 8px;
+    padding: 6px 10px;
+    background: #fff;
+    color: #444;
+    outline: none;
+    cursor: pointer;
+  }
+
+  .compare-bar {
+    display: none;
+    background: #1c1c1c;
+    border-radius: 12px;
+    padding: 12px 20px;
+    margin-bottom: 16px;
+    align-items: center;
+    justify-content: space-between;
+    color: #fff;
+    font-size: 13px;
+    gap: 12px;
+  }
+
+  .compare-bar.visible { display: flex; }
+
+  .compare-slots {
+    display: flex;
+    gap: 8px;
+    flex: 1;
+  }
+
+  .compare-slot {
+    background: #2e2e2e;
+    border-radius: 8px;
+    padding: 6px 12px;
+    font-size: 12px;
+    color: #ccc;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    min-width: 110px;
+  }
+
+  .compare-slot.filled {
+    background: #e85d2f;
+    color: #fff;
+  }
+
+  .remove-slot {
+    cursor: pointer;
+    font-size: 14px;
+    line-height: 1;
+    opacity: 0.8;
+  }
+
+  .btn-compare-now {
+    background: #e85d2f;
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    padding: 8px 16px;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+  }
+
+  .btn-compare-now:disabled {
+    background: #555;
+    cursor: default;
+  }
+
+  .hotel-card {
+    background: #fff;
+    border-radius: 16px;
+    overflow: hidden;
+    display: flex;
+    margin-bottom: 14px;
+    border: 0.5px solid #e0ddd8;
+    transition: border-color 0.2s;
+  }
+
+  .hotel-card.comparing {
+    border: 2px solid #e85d2f;
+  }
+
+  .hotel-img {
+    width: 220px;
+    flex-shrink: 0;
+    background: #ccc;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .hotel-img img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .img-placeholder {
+    width: 100%;
+    height: 100%;
+    min-height: 170px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 40px;
+  }
+
+  .hotel-badge {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    background: #1c1c1c;
+    color: #fff;
+    font-size: 10px;
+    font-weight: 600;
+    padding: 3px 8px;
+    border-radius: 20px;
+    letter-spacing: 0.5px;
+  }
+
+  .hotel-info {
+    flex: 1;
+    padding: 18px 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .hotel-location {
+    font-size: 11px;
+    color: #e85d2f;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-weight: 500;
+  }
+
+  .hotel-name {
+    font-family: 'Playfair Display', serif;
+    font-size: 18px;
+    color: #1a1a1a;
+    line-height: 1.25;
+  }
+
+  .hotel-cat {
+    font-size: 12px;
+    color: #999;
+  }
+
+  .hotel-amenities {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    margin-top: 2px;
+  }
+
+  .amenity-pill {
+    background: #f5f3f0;
+    border-radius: 20px;
+    padding: 3px 9px;
+    font-size: 11px;
+    color: #555;
+  }
+
+  .hotel-bottom {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    margin-top: auto;
+    padding-top: 10px;
+    border-top: 0.5px solid #f0ede8;
+  }
+
+  .hotel-score {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .score-badge {
+    background: #1c1c1c;
+    color: #fff;
+    font-size: 13px;
+    font-weight: 600;
+    padding: 4px 8px;
+    border-radius: 8px;
+  }
+
+  .score-label { font-size: 11px; color: #999; }
+
+  .hotel-price {
+    text-align: right;
+  }
+
+  .price-total {
+    font-size: 11px;
+    color: #999;
+  }
+
+  .price-night {
+    font-size: 20px;
+    font-weight: 600;
+    color: #1a1a1a;
+  }
+
+  .price-night span { font-size: 12px; color: #999; font-weight: 400; }
+
+  .hotel-actions {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    padding: 18px 16px 18px 0;
+    gap: 8px;
+    flex-shrink: 0;
+  }
+
+  .btn-view {
+    background: #e85d2f;
+    color: #fff;
+    border: none;
+    border-radius: 10px;
+    padding: 9px 16px;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+
+  .btn-cmp {
+    background: none;
+    border: 1px solid #ddd;
+    border-radius: 10px;
+    padding: 8px 16px;
+    font-size: 13px;
+    color: #555;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    white-space: nowrap;
+  }
+
+  .btn-cmp.active {
+    border-color: #e85d2f;
+    color: #e85d2f;
+    background: #fdf0eb;
+  }
+
+  .checkmark { font-size: 12px; }
+
+  /* Modal */
+  .modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.55);
+    z-index: 100;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .modal-overlay.open { display: flex; }
+
+  .modal {
+    background: #fff;
+    border-radius: 20px;
+    width: 680px;
+    max-width: 96vw;
+    max-height: 90vh;
+    overflow-y: auto;
+    padding: 28px;
+    position: relative;
+  }
+
+  .modal-close {
+    position: absolute;
+    top: 16px;
+    right: 20px;
+    background: #f5f3f0;
+    border: none;
+    border-radius: 8px;
+    width: 30px;
+    height: 30px;
+    font-size: 16px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #555;
+  }
+
+  .modal-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 22px;
+    margin-bottom: 4px;
+    color: #1a1a1a;
+  }
+
+  .modal-sub {
+    font-size: 12px;
+    color: #999;
+    margin-bottom: 20px;
+  }
+
+  .cmp-table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+
+  .cmp-table th {
+    text-align: center;
+    font-family: 'Playfair Display', serif;
+    font-size: 15px;
+    padding: 0 12px 14px;
+    border-bottom: 2px solid #f0ede8;
+    font-weight: 700;
+  }
+
+  .cmp-table th .th-sub {
+    display: block;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 11px;
+    color: #999;
+    font-weight: 400;
+    margin-top: 2px;
+  }
+
+  .cmp-table td {
+    padding: 10px 12px;
+    text-align: center;
+    font-size: 13px;
+    border-bottom: 0.5px solid #f0ede8;
+    color: #444;
+  }
+
+  .cmp-table tr:last-child td { border-bottom: none; }
+
+  .cmp-table td:first-child {
+    text-align: left;
+    color: #999;
+    font-size: 12px;
+    font-weight: 500;
+    width: 130px;
+  }
+
+  .cmp-check { color: #22a87a; font-size: 16px; }
+  .cmp-cross { color: #ccc; font-size: 16px; }
+
+  .cmp-price {
+    font-size: 17px;
+    font-weight: 600;
+    color: #1a1a1a;
+  }
+
+  .cmp-score-b {
+    background: #1c1c1c;
+    color: #fff;
+    padding: 3px 8px;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 600;
+    display: inline-block;
+  }
+
+  .modal-footer {
+    display: flex;
+    gap: 10px;
+    margin-top: 20px;
+    justify-content: flex-end;
+  }
+
+  .btn-modal-close {
+    border: 1px solid #ddd;
+    background: none;
+    border-radius: 10px;
+    padding: 9px 18px;
+    font-size: 13px;
+    cursor: pointer;
+    color: #555;
+  }
+
+  .best-value {
+    background: #fdf0eb;
+    color: #c44a1f;
+    font-size: 10px;
+    font-weight: 700;
+    padding: 2px 7px;
+    border-radius: 20px;
+    display: inline-block;
+    margin-bottom: 4px;
+    letter-spacing: 0.4px;
+  }
+</style>
+
+<div class="page">
+
+  <div class="topbar">
+    <div class="logo">
+      <div class="logo-icon">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M7 1C4.2 1 2 3.2 2 6c0 3.5 5 8 5 8s5-4.5 5-8c0-2.8-2.2-5-5-5zm0 6.5a1.5 1.5 0 110-3 1.5 1.5 0 010 3z" fill="white"/></svg>
+      </div>
+      Nestay
+    </div>
+    <div class="topbar-search">
+      <input type="text" placeholder="Madrid · 2 adultos · 1 hab · 5 jun – 8 jun" value="Madrid · 2 adultos · 1 hab · 5 jun – 8 jun">
+    </div>
+    <button class="btn-unirse">Unirse</button>
+  </div>
+
+  <div class="search-meta">
+    <span><strong>238 alojamientos</strong> en Madrid</span>
+    <span class="tag">Hoteles</span>
+    <span>5 jun – 8 jun · 2 adultos</span>
+  </div>
+
+  <div class="layout">
+    <div class="sidebar">
+      <h3>Precio máximo</h3>
+      <div class="price-range-label" id="price-label">Hasta $648</div>
+      <input type="range" min="20" max="1000" value="648" id="price-slider" oninput="document.getElementById('price-label').textContent='Hasta $'+this.value">
+      <div class="price-ends"><span>$20</span><span>$1000+</span></div>
+
+      <h3>Categoría</h3>
+      <label class="star-opt"><input type="checkbox" checked> <span class="stars">★★★★★</span> 5 estrellas</label>
+      <label class="star-opt"><input type="checkbox" checked> <span class="stars">★★★★</span> 4 estrellas</label>
+      <label class="star-opt"><input type="checkbox"> <span class="stars">★★★</span> 3 estrellas</label>
+
+      <h3>Servicios</h3>
+      <label class="amenity-opt"><input type="checkbox" checked> Wifi gratuito</label>
+      <label class="amenity-opt"><input type="checkbox"> Piscina</label>
+      <label class="amenity-opt"><input type="checkbox"> Spa</label>
+      <label class="amenity-opt"><input type="checkbox"> Restaurante</label>
+      <label class="amenity-opt"><input type="checkbox"> Parking</label>
+      <label class="amenity-opt"><input type="checkbox"> Gimnasio</label>
+
+      <button class="btn-clear">Limpiar filtros</button>
+    </div>
+
+    <div class="results-area">
+      <div class="results-header">
+        <div class="results-count"><strong>238 alojamientos</strong> encontrados</div>
+        <select class="sort-select">
+          <option>Ordenar: Recomendados</option>
+          <option>Precio: menor a mayor</option>
+          <option>Precio: mayor a menor</option>
+          <option>Mejor valoración</option>
+        </select>
+      </div>
+
+      <div class="compare-bar" id="compareBar">
+        <div style="font-weight:500;font-size:12px;color:#aaa;white-space:nowrap">Comparando</div>
+        <div class="compare-slots" id="compareSlots"></div>
+        <button class="btn-compare-now" id="btnCompareNow" onclick="openModal()">Ver comparación</button>
+      </div>
+
+      <div id="hotelList"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal -->
+<div class="modal-overlay" id="modalOverlay" onclick="if(event.target===this)closeModal()">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal()">✕</button>
+    <div class="modal-title">Comparación de alojamientos</div>
+    <div class="modal-sub">Compara características clave para tomar la mejor decisión</div>
+    <div id="modalContent"></div>
+    <div class="modal-footer">
+      <button class="btn-modal-close" onclick="closeModal()">Cerrar</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const hotels = [
+  {
+    id: 1,
+    name: "Gran Hotel Meliá Madrid",
+    location: "Calle de Recoletos 4, Madrid",
+    stars: 5,
+    category: "Hotel · Lujo",
+    score: 8.9,
+    scoreLabel: "Excelente",
+    priceNight: 189,
+    totalStay: 567,
+    amenities: ["Wifi", "Piscina", "Spa"],
+    allAmenities: { wifi: true, pool: true, spa: true, restaurant: true, parking: false, gym: true, bar: true, aircon: true, petFriendly: false },
+    emoji: "🏨",
+    bg: "#d4c4b0",
+    badge: "5 estrellas",
+    bestValue: false
+  },
+  {
+    id: 2,
+    name: "NH Collection Suecia",
+    location: "C. del Marqués de Casa Riera 4, Madrid",
+    stars: 4,
+    category: "Hotel · Superior",
+    score: 8.4,
+    scoreLabel: "Muy bueno",
+    priceNight: 125,
+    totalStay: 375,
+    amenities: ["Wifi", "Restaurante", "Bar"],
+    allAmenities: { wifi: true, pool: false, spa: false, restaurant: true, parking: true, gym: false, bar: true, aircon: true, petFriendly: true },
+    emoji: "🏩",
+    bg: "#b0c4c8",
+    badge: "4 estrellas",
+    bestValue: true
+  },
+  {
+    id: 3,
+    name: "Barceló Torre de Madrid",
+    location: "Plaza de España 18, Madrid",
+    stars: 4,
+    category: "Hotel · Vistas panorámicas",
+    score: 8.7,
+    scoreLabel: "Excelente",
+    priceNight: 145,
+    totalStay: 435,
+    amenities: ["Wifi", "Piscina", "Spa"],
+    allAmenities: { wifi: true, pool: true, spa: true, restaurant: true, parking: false, gym: true, bar: false, aircon: true, petFriendly: false },
+    emoji: "🗼",
+    bg: "#c4b8d4",
+    badge: "4 estrellas",
+    bestValue: false
+  },
+  {
+    id: 4,
+    name: "Hotel Only YOU Boutique",
+    location: "Calle del Barquillo 21, Madrid",
+    stars: 4,
+    category: "Hotel · Boutique",
+    score: 9.1,
+    scoreLabel: "Excepcional",
+    priceNight: 210,
+    totalStay: 630,
+    amenities: ["Wifi", "Bar", "Spa"],
+    allAmenities: { wifi: true, pool: false, spa: true, restaurant: true, parking: false, gym: true, bar: true, aircon: true, petFriendly: true },
+    emoji: "✨",
+    bg: "#c8c0b0",
+    badge: "Boutique",
+    bestValue: false
+  }
+];
+
+const compareSet = new Set();
+
+function renderHotels() {
+  const list = document.getElementById('hotelList');
+  list.innerHTML = '';
+  hotels.forEach(h => {
+    const isComparing = compareSet.has(h.id);
+    const card = document.createElement('div');
+    card.className = 'hotel-card' + (isComparing ? ' comparing' : '');
+    card.id = 'card-' + h.id;
+    card.innerHTML = `
+      <div class="hotel-img" style="background:${h.bg}">
+        <div class="img-placeholder">${h.emoji}</div>
+        <div class="hotel-badge">${h.badge}</div>
+      </div>
+      <div class="hotel-info">
+        <div class="hotel-location">
+          <svg width="10" height="10" viewBox="0 0 14 14" fill="none" style="flex-shrink:0"><path d="M7 1C4.2 1 2 3.2 2 6c0 3.5 5 8 5 8s5-4.5 5-8c0-2.8-2.2-5-5-5zm0 6.5a1.5 1.5 0 110-3 1.5 1.5 0 010 3z" fill="#e85d2f"/></svg>
+          ${h.location}
+        </div>
+        <div class="hotel-name">${h.name}</div>
+        <div class="hotel-cat">${h.category}</div>
+        <div class="hotel-amenities">
+          ${h.amenities.map(a => `<span class="amenity-pill">${a}</span>`).join('')}
+        </div>
+        <div class="hotel-bottom">
+          <div class="hotel-score">
+            <span class="score-badge">${h.score}</span>
+            <span class="score-label">${h.scoreLabel}</span>
+          </div>
+          <div class="hotel-price">
+            <div class="price-total">Total estancia: $${h.totalStay}</div>
+            <div class="price-night">$${h.priceNight} <span>/noche</span></div>
+          </div>
+        </div>
+      </div>
+      <div class="hotel-actions">
+        <button class="btn-view" onclick="alert('Ver alojamiento: ${h.name}')">Ver nido</button>
+        <button class="btn-cmp ${isComparing ? 'active' : ''}" id="cmpbtn-${h.id}" onclick="toggleCompare(${h.id})">
+          <span class="checkmark">${isComparing ? '✓' : '+'}</span>
+          ${isComparing ? 'Comparando' : 'Comparar'}
+        </button>
+      </div>
+    `;
+    list.appendChild(card);
+  });
+}
+
+function toggleCompare(id) {
+  if (compareSet.has(id)) {
+    compareSet.delete(id);
+  } else {
+    if (compareSet.size >= 3) {
+      alert('Puedes comparar máximo 3 alojamientos.');
+      return;
+    }
+    compareSet.add(id);
+  }
+  renderHotels();
+  updateCompareBar();
+}
+
+function updateCompareBar() {
+  const bar = document.getElementById('compareBar');
+  const slots = document.getElementById('compareSlots');
+  const btn = document.getElementById('btnCompareNow');
+  if (compareSet.size === 0) {
+    bar.classList.remove('visible');
+    return;
+  }
+  bar.classList.add('visible');
+  const arr = Array.from(compareSet);
+  slots.innerHTML = '';
+  [0,1,2].forEach(i => {
+    const slot = document.createElement('div');
+    if (arr[i]) {
+      const h = hotels.find(x => x.id === arr[i]);
+      slot.className = 'compare-slot filled';
+      slot.innerHTML = `<span style="overflow:hidden;white-space:nowrap;text-overflow:ellipsis;max-width:80px">${h.name.split(' ').slice(0,2).join(' ')}</span><span class="remove-slot" onclick="toggleCompare(${arr[i]})">✕</span>`;
+    } else {
+      slot.className = 'compare-slot';
+      slot.textContent = 'Añadir hotel...';
+    }
+    slots.appendChild(slot);
+  });
+  btn.disabled = compareSet.size < 2;
+}
+
+function openModal() {
+  const arr = Array.from(compareSet).map(id => hotels.find(h => h.id === id));
+  const features = [
+    { label: 'Precio/noche', key: 'price' },
+    { label: 'Valoración', key: 'score' },
+    { label: 'Wifi gratis', key: 'wifi' },
+    { label: 'Piscina', key: 'pool' },
+    { label: 'Spa', key: 'spa' },
+    { label: 'Restaurante', key: 'restaurant' },
+    { label: 'Parking', key: 'parking' },
+    { label: 'Gimnasio', key: 'gym' },
+    { label: 'Bar', key: 'bar' },
+    { label: 'Aire acondicionado', key: 'aircon' },
+    { label: 'Acepta mascotas', key: 'petFriendly' },
+  ];
+
+  let cols = arr.map(h => `
+    <th>
+      ${h.bestValue ? '<div class="best-value">MEJOR VALOR</div>' : ''}
+      ${h.name.split(' ').slice(0, 3).join(' ')}
+      <span class="th-sub">${'★'.repeat(h.stars)} · ${h.category.split('·')[0].trim()}</span>
+    </th>
+  `).join('');
+
+  let rows = features.map(f => {
+    let cells = arr.map(h => {
+      if (f.key === 'price') return `<td><span class="cmp-price">$${h.priceNight}</span><br><span style="font-size:10px;color:#aaa">/noche</span></td>`;
+      if (f.key === 'score') return `<td><span class="cmp-score-b">${h.score}</span><br><span style="font-size:10px;color:#aaa">${h.scoreLabel}</span></td>`;
+      const has = h.allAmenities[f.key];
+      return `<td><span class="${has ? 'cmp-check' : 'cmp-cross'}">${has ? '✓' : '✕'}</span></td>`;
+    }).join('');
+    return `<tr><td>${f.label}</td>${cells}</tr>`;
+  }).join('');
+
+  document.getElementById('modalContent').innerHTML = `
+    <table class="cmp-table">
+      <thead><tr><th></th>${cols}</tr></thead>
+      <tbody>${rows}</tbody>
+    </table>
+  `;
+
+  document.getElementById('modalOverlay').classList.add('open');
+}
+
+function closeModal() {
+  document.getElementById('modalOverlay').classList.remove('open');
+}
+
+renderHotels();
+updateCompareBar();
+</script>

@@ -59,11 +59,14 @@ class SearchController extends Controller
     public function details(Request $request): JsonResponse
     {
         $validated = $request->validate([
-            'hotel_id' => 'required|string',
-            'checkin'  => 'required|date|after:today',
-            'checkout' => 'required|date|after:checkin',
-            'adults'   => 'required|integer|min:1|max:8',
-            'children' => 'nullable|integer|min:0|max:6',
+            'hotel_id'      => 'required|string',
+            'checkin'       => 'required|date|after:today',
+            'checkout'      => 'required|date|after:checkin',
+            'adults'        => 'required|integer|min:1|max:8',
+            'children'      => 'nullable|integer|min:0|max:6',
+            'hotel_name'    => 'nullable|string',
+            'hotel_address' => 'nullable|string',
+            'hotel_stars'   => 'nullable|integer',
         ]);
 
         $result = $this->searchService->getHotelPage(

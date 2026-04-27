@@ -15,41 +15,7 @@ window.BookingModule = BookingModule;
 
 Alpine.start();
 
-/**
- * CUSTOM CURSOR LOGIC
- */
 document.addEventListener('DOMContentLoaded', () => {
-    const cursor = document.getElementById('cursor');
-    const ring = document.getElementById('cursor-ring');
-
-    if (cursor && ring) {
-        document.addEventListener('mousemove', (e) => {
-            cursor.style.left = e.clientX + 'px';
-            cursor.style.top = e.clientY + 'px';
-            
-            // Subtle delay for the ring
-            setTimeout(() => {
-                ring.style.left = e.clientX + 'px';
-                ring.style.top = e.clientY + 'px';
-            }, 50);
-        });
-
-        // Hover effects
-        const interactiveElements = 'a, button, .stab, .pcard, .rcard, .dcard, .guest-trigger';
-        document.querySelectorAll(interactiveElements).forEach(el => {
-            el.addEventListener('mouseenter', () => {
-                cursor.style.transform = 'translate(-50%, -50%) scale(1.5)';
-                ring.style.transform = 'translate(-50%, -50%) scale(0.6)';
-                ring.style.borderColor = 'var(--t)';
-            });
-            el.addEventListener('mouseleave', () => {
-                cursor.style.transform = 'translate(-50%, -50%) scale(1)';
-                ring.style.transform = 'translate(-50%, -50%) scale(1)';
-                ring.style.borderColor = 'rgba(224, 122, 95, .5)';
-            });
-        });
-    }
-
     // Reveal animations observer
     const revealObserver = new IntersectionObserver((entries) => {
         entries.forEach(entry => {

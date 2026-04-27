@@ -13,8 +13,8 @@ return [
     'environment' => env('RATEHAWK_ENV', 'sandbox'),
 
     'base_url' => env('RATEHAWK_ENV', 'sandbox') === 'production'
-        ? env('RATEHAWK_PROD_URL', 'https://api.ratehawk.com')
-        : env('RATEHAWK_SANDBOX_URL', 'https://api.sandbox.ratehawk.com'),
+        ? env('RATEHAWK_PROD_URL',    'https://api.worldota.net')
+        : env('RATEHAWK_SANDBOX_URL', 'https://api-sandbox.worldota.net'),
 
     // When true, all API calls return realistic mock data (no credentials needed)
     'use_mock' => env('RATEHAWK_USE_MOCK', true),
@@ -28,8 +28,8 @@ return [
     ],
 
     // HTTP client settings
-    'timeout'  => env('RATEHAWK_TIMEOUT', 30),
-    'retries'  => 2,
+    'timeout'  => env('RATEHAWK_TIMEOUT', 8),
+    'retries'  => 0,
 
     // Rate limiting: max requests per second to RateHawk API
     'rate_limit_rps' => 10,

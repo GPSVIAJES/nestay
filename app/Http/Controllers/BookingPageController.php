@@ -34,9 +34,18 @@ class BookingPageController extends Controller
      */
     public function confirm(Request $request, string $id)
     {
-        $booking = Booking::where('ratehawk_order_id', $id)
-                          ->where('user_id', Auth::id())
-                          ->firstOrFail();
+        $query = Booking::where('partner_order_id', $id);
+        
+        if (Auth::check()) {
+            $query->where(function($q) {
+                $q->where('user_id', Auth::id())
+                  ->orWhereNull('user_id');
+            });
+        } else {
+            $query->whereNull('user_id');
+        }
+
+        $booking = $query->firstOrFail();
 
         return view('pages.booking-confirm', compact('booking'));
     }

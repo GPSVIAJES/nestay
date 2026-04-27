@@ -14,31 +14,97 @@ class BookingController extends Controller
     public function __construct(protected BookingService $bookingService)
     {}
 
-    /**
-     * Validate rate before booking (prebook step).
-     * POST /api/prebook
-     */
+    // ─────────────────────────────────────────────────────────────────────────
+    // STEP 3 — Prebook
+    // POST /api/prebook
+    //
+    // Input:  book_hash (h-... from hotelpage), optional price_increase_percent
+    // Output: new book_hash (p-...) + rate details + price_changed flag
+    //
+    // If price_changed = true, the frontend MUST inform the user about the
+    // new price before proceeding to booking.
+    // ─────────────────────────────────────────────────────────────────────────
+
     public function prebook(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'book_hash'              => 'required|string',
+            'price_increase_percent' => 'nullable|integer|min:0|max:100',
+        ]);
+
+        $result = $this->bookingService->prebook(
+            $validated['book_hash'],
+            $validated['price_increase_percent'] ?? 0
+        );
+
+        return response()->json($result);
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // STEP 4.1 — Create Booking Form
+    // POST /api/booking-form
+    //
+    // Input:  book_hash (p-... from prebook)
+    // Output: confirmation that ETG linked the order to our partner_order_id
+    //
+    // This step generates a partner_order_id and links it to the ETG booking.
+    // Returns the partner_order_id so the frontend can use it in the next step.
+    //
+    // Retried automatically up to 10 times inside BookingService.
+    // ─────────────────────────────────────────────────────────────────────────
+
+    public function createBookingForm(Request $request): JsonResponse
     {
         $validated = $request->validate([
             'book_hash' => 'required|string',
         ]);
 
-        $result = $this->bookingService->prebook($validated['book_hash']);
+        $partnerOrderId = $this->bookingService->generatePartnerOrderId(Auth::id());
 
-        return response()->json($result);
+        $result = $this->bookingService->createBookingForm(
+            $validated['book_hash'],
+            $partnerOrderId
+        );
+
+        if (($result['status'] ?? '') !== 'ok') {
+            $error = $result['error'] ?? 'unknown';
+
+            // max_retries_exceeded means we couldn't get a response — restart search
+            if ($error === 'max_retries_exceeded') {
+                return response()->json([
+                    'status'  => 'error',
+                    'error'   => 'max_retries_exceeded',
+                    'message' => 'No se pudo crear la reserva tras varios intentos. Por favor, busca de nuevo.',
+                ], 503);
+            }
+
+            return response()->json([
+                'status'  => 'error',
+                'error'   => $error,
+                'message' => 'No se pudo inicializar la reserva. Por favor, inténtalo de nuevo.',
+            ], 422);
+        }
+
+        return response()->json([
+            'status'           => 'ok',
+            'partner_order_id' => $partnerOrderId,
+        ]);
     }
 
-    /**
-     * START the async booking process (step 1 of 2).
-     * Saves to DB with status = 'pending' and returns the order_id.
-     * The frontend must poll /api/booking-status/{id} to get the confirmation.
-     *
-     * POST /api/book
-     */
+    // ─────────────────────────────────────────────────────────────────────────
+    // STEP 4.2 — Start Booking Process
+    // POST /api/book
+    //
+    // Input:  partner_order_id (from createBookingForm) + guest details
+    // Output: booking initiated — frontend must poll /api/booking-status/{id}
+    //
+    // Booking is saved to local DB with status = 'pending'.
+    // ─────────────────────────────────────────────────────────────────────────
+
     public function book(Request $request): JsonResponse
     {
         $validated = $request->validate([
+            'partner_order_id'    => 'required|string',
             'book_hash'           => 'required|string',
             'hotel_id'            => 'required|string',
             'hotel_name'          => 'required|string',
@@ -48,80 +114,121 @@ class BookingController extends Controller
             'check_in'            => 'required|date',
             'check_out'           => 'required|date|after:check_in',
             'guests'              => 'required|integer|min:1',
+            'currency'            => 'nullable|string|size:3',
             'total_price'         => 'required|numeric|min:0',
             'cancellation_policy' => 'nullable|string',
+            // Lead guest (for DB snapshot)
             'guest.first_name'    => 'required|string|max:100',
             'guest.last_name'     => 'required|string|max:100',
             'guest.email'         => 'required|email',
             'guest.phone'         => 'nullable|string|max:30',
+            // Rooms with per-room guests (for ETG API payload)
+            'rooms'               => 'nullable|array|max:9',
+            'rooms.*.guests'      => 'nullable|array',
+            'rooms.*.guests.*.first_name' => 'required_with:rooms|string',
+            'rooms.*.guests.*.last_name'  => 'required_with:rooms|string',
         ]);
 
         $result = $this->bookingService->startBooking($validated, Auth::id());
 
-        // ETG returns either 'ok' (with order_id in processing state) or an error
-        if (empty($result['data']['order_id'])) {
+        $status = $result['status'] ?? '';
+        $error  = $result['error']  ?? '';
+
+        // booking_form_expired and rate_not_found are fatal for this step
+        if (in_array($error, ['booking_form_expired', 'rate_not_found', 'return_path_required'])) {
+            return response()->json([
+                'status'  => 'error',
+                'error'   => $error,
+                'message' => 'La reserva no pudo iniciarse: ' . $error . '. Por favor, busca de nuevo.',
+            ], 422);
+        }
+
+        // For timeout, unknown, 5xx — ETG says proceed to poll /finish/status/
+        // so we return ok and let the frontend poll
+        if (!in_array($status, ['ok', 'processing']) && empty($error)) {
             return response()->json([
                 'status'  => 'error',
                 'message' => 'No se pudo iniciar la reserva. Por favor, inténtalo de nuevo.',
             ], 422);
         }
 
-        // Return order_id immediately — frontend will poll for status
         return response()->json([
-            'status'   => 'ok',
-            'order_id' => $result['data']['order_id'],
-            'message'  => 'Reserva iniciada. Verificando disponibilidad...',
+            'status'           => 'ok',
+            'partner_order_id' => $validated['partner_order_id'],
+            'message'          => 'Reserva iniciada. Verificando disponibilidad...',
         ]);
     }
 
-    /**
-     * POLL booking status (step 2 of 2).
-     * Frontend calls this every few seconds until status is 'confirmed' or 'failed'.
-     * Also syncs local DB when confirmed.
-     *
-     * GET /api/booking-status/{id}
-     */
-    public function status(Request $request, string $id): JsonResponse
+    // ─────────────────────────────────────────────────────────────────────────
+    // STEP 4.3 — Poll Booking Status
+    // GET /api/booking-status/{partnerOrderId}
+    //
+    // Poll every ~2 seconds until booking_status is 'confirmed' or 'failed'.
+    // Final failure errors: soldout, book_limit, provider, not_allowed,
+    //   booking_finish_did_not_succeed, block, charge
+    // Retryable (keep polling): processing, timeout, unknown, 5xx
+    // ─────────────────────────────────────────────────────────────────────────
+
+    public function status(Request $request, string $partnerOrderId): JsonResponse
     {
-        $booking = Booking::where('ratehawk_order_id', $id)
-                          ->where('user_id', Auth::id())
-                          ->first();
+        $query = Booking::where('partner_order_id', $partnerOrderId);
+        
+        if (Auth::check()) {
+            $query->where(function($q) {
+                $q->where('user_id', Auth::id())
+                  ->orWhereNull('user_id');
+            });
+        } else {
+            $query->whereNull('user_id');
+        }
+
+        $booking = $query->first();
 
         if (!$booking) {
             return response()->json(['status' => 'error', 'message' => 'Reserva no encontrada'], 404);
         }
 
-        // If already confirmed or cancelled, return immediately from DB
+        // Already in a terminal state — return from DB without hitting ETG again
         if (in_array($booking->status, ['confirmed', 'cancelled', 'failed'])) {
             return response()->json([
                 'status'         => 'ok',
                 'booking_status' => $booking->status,
-                'order_id'       => $booking->ratehawk_order_id,
+                'partner_order_id' => $partnerOrderId,
             ]);
         }
 
-        // Still pending — poll ETG API for the real status
-        $apiResult = $this->bookingService->pollBookingStatus($id);
-        $apiStatus = $apiResult['data']['status'] ?? 'processing';
+        // Still pending — poll ETG
+        $apiResult = $this->bookingService->pollBookingStatus($partnerOrderId);
+        $apiStatus = $apiResult['data']['status'] ?? '';
+        $apiError  = $apiResult['error']          ?? '';
 
-        if ($apiStatus === 'confirmed') {
+        // Terminal success
+        if ($apiStatus === 'ok' || $apiStatus === 'confirmed') {
             $booking->update(['status' => 'confirmed']);
-        } elseif ($apiStatus === 'failed' || $apiStatus === 'cancelled') {
+        }
+
+        // Terminal failures — stop polling
+        $terminalErrors = ['soldout', 'book_limit', 'provider', 'not_allowed',
+                           'booking_finish_did_not_succeed', 'block', 'charge', '3ds'];
+
+        if (in_array($apiError, $terminalErrors) || in_array($apiStatus, ['failed', 'cancelled'])) {
             $booking->update(['status' => 'failed']);
         }
-        // else still processing — keep 'pending' in DB, frontend polls again
+
+        // For: processing, timeout, unknown, 5xx — keep status as 'pending',
+        // frontend continues polling.
 
         return response()->json([
-            'status'         => 'ok',
-            'booking_status' => $booking->fresh()->status,
-            'order_id'       => $booking->ratehawk_order_id,
+            'status'           => 'ok',
+            'booking_status'   => $booking->fresh()->status,
+            'partner_order_id' => $partnerOrderId,
         ]);
     }
 
-    /**
-     * Get authenticated user's bookings.
-     * GET /api/my-bookings
-     */
+    // ─────────────────────────────────────────────────────────────────────────
+    // GET /api/my-bookings
+    // ─────────────────────────────────────────────────────────────────────────
+
     public function myBookings(Request $request): JsonResponse
     {
         $tab     = $request->input('tab', 'upcoming'); // upcoming | past | all
@@ -141,10 +248,10 @@ class BookingController extends Controller
         ]);
     }
 
-    /**
-     * Cancel a booking — calls ETG API first, then updates local DB.
-     * DELETE /api/bookings/{id}/cancel
-     */
+    // ─────────────────────────────────────────────────────────────────────────
+    // DELETE /api/bookings/{id}/cancel
+    // ─────────────────────────────────────────────────────────────────────────
+
     public function cancel(Request $request, int $id): JsonResponse
     {
         $booking = Booking::where('id', $id)
@@ -156,10 +263,12 @@ class BookingController extends Controller
         }
 
         if ($booking->status === 'pending') {
-            return response()->json(['status' => 'error', 'message' => 'No se puede cancelar una reserva que aún está siendo procesada'], 422);
+            return response()->json([
+                'status'  => 'error',
+                'message' => 'No se puede cancelar una reserva que aún está siendo procesada',
+            ], 422);
         }
 
-        // Call ETG API to cancel on their side first
         $apiResult = $this->bookingService->cancelBookingViaApi($booking);
 
         if (($apiResult['status'] ?? '') !== 'ok') {

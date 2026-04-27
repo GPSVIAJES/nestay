@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class Booking extends Model
 {
     protected $fillable = [
-        'user_id', 'ratehawk_order_id', 'book_hash',
+        'user_id', 'partner_order_id', 'ratehawk_order_id', 'book_hash',
         'hotel_id', 'hotel_name', 'hotel_address', 'hotel_city',
         'hotel_country', 'hotel_stars', 'hotel_image',
         'check_in', 'check_out', 'guests', 'rooms', 'rooms_data',

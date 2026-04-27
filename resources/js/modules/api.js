@@ -53,18 +53,31 @@ export const NestayAPI = {
         fetchWrap('hotel-details', { method: 'POST', body: JSON.stringify(params) }),
 
     // Booking Flow
-    prebook: (bookHash) => 
-        fetchWrap('prebook', { method: 'POST', body: JSON.stringify({ book_hash: bookHash }) }),
+    prebook: (bookHash, priceIncreasePct = 0) =>
+        fetchWrap('prebook', { method: 'POST', body: JSON.stringify({
+            book_hash: bookHash,
+            price_increase_percent: priceIncreasePct,
+        })}),
 
-    book: (data) => 
+    // Step 4.1 — Create booking form (links p-hash to our partner_order_id)
+    createBookingForm: (bookHash) =>
+        fetchWrap('booking-form', { method: 'POST', body: JSON.stringify({ book_hash: bookHash }) }),
+
+    // Step 4.2 — Start booking (finish)
+    book: (data) =>
         fetchWrap('book', { method: 'POST', body: JSON.stringify(data) }),
 
-    getBookingStatus: (id) => 
-        fetchWrap(`booking-status/${id}`, { method: 'GET' }),
+    // Step 4.3 — Poll status using partner_order_id
+    getBookingStatus: (partnerOrderId) =>
+        fetchWrap(`booking-status/${partnerOrderId}`, { method: 'GET' }),
 
-    myBookings: (tab = 'upcoming', perPage = 10) => 
-        fetchWrap('my-bookings', { method: 'GET', params: { tab, per_page: perPage } }),
+    myBookings: (tab = 'upcoming', perPage = 10) =>
+        fetchWrap(`my-bookings?tab=${tab}&per_page=${perPage}`, { method: 'GET' }),
 
-    cancelBooking: (id) => 
+    cancelBooking: (id) =>
         fetchWrap(`bookings/${id}/cancel`, { method: 'DELETE' }),
+
+    // Alias for SearchModule
+    autocomplete: (query, language = 'es') =>
+        fetchWrap('suggest', { method: 'POST', body: JSON.stringify({ q: query, language }) }),
 };
