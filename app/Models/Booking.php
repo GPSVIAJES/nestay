@@ -11,7 +11,7 @@ class Booking extends Model
         'user_id', 'partner_order_id', 'ratehawk_order_id', 'book_hash',
         'hotel_id', 'hotel_name', 'hotel_address', 'hotel_city',
         'hotel_country', 'hotel_stars', 'hotel_image',
-        'check_in', 'check_out', 'guests', 'rooms', 'rooms_data',
+        'check_in', 'check_out', 'guests', 'children', 'rooms', 'rooms_data',
         'total_price', 'currency',
         'guest_first_name', 'guest_last_name', 'guest_email', 'guest_phone',
         'status', 'cancellation_policy',

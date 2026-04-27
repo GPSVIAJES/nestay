@@ -44,14 +44,23 @@
             <div
                 style="font-size:9px; font-weight:700; letter-spacing:.8px; text-transform:uppercase; color:#888; margin-bottom:2px;">
                 Huéspedes</div>
+            @php
+                $adults = request('adults', 2);
+                $children = request('children', 0);
+                $roomsCount = request('rooms', 1);
+                $roomsConfig = request('rooms_config');
+                $total = $adults + $children;
+                $label = $children > 0 ? ($total > 1 ? 'huéspedes' : 'huésped') : ($adults > 1 ? 'adultos' : 'adulto');
+            @endphp
             <div onclick="SearchMix.toggleGuest()"
                 style="color:#fff; font-size:13px; font-weight:500; cursor:pointer; white-space:nowrap;" id="guest-summary">
-                {{ request('adults', 2) }} adultos · {{ request('rooms', 1) }} hab
+                {{ $total }} {{ $label }} · {{ $roomsCount }} hab
             </div>
-            <input type="hidden" name="adults" id="adults-input" value="{{ request('adults', 2) }}">
-            <input type="hidden" name="rooms" id="rooms-input" value="{{ request('rooms', 1) }}">
-            <input type="hidden" name="children" id="children-input" value="{{ request('children', 0) }}">
-            <div class="guest-hub-panel active" id="guest-hub-panel"
+            <input type="hidden" name="adults" id="adults-input" value="{{ $adults }}">
+            <input type="hidden" name="rooms" id="rooms-input" value="{{ $roomsCount }}">
+            <input type="hidden" name="children" id="children-input" value="{{ $children }}">
+            <input type="hidden" name="rooms_config" id="rooms-config-input" value="{{ $roomsConfig }}">
+            <div class="guest-hub-panel" id="guest-hub-panel"
                 style="top:110%; right:0; left:auto; width:290px; padding:20px; background:#fff; border-radius:18px; border:1px solid #eee; box-shadow:0 16px 48px rgba(0,0,0,0.15); color: #1a1a1a;">
                 <div id="rooms-container"></div>
                 <button type="button" onclick="SearchMix.addRoom()"
@@ -717,7 +726,7 @@
 
         .bw-cell-value {
             font-size: 14px;
-            font-weight: 500;
+            font-weight: 700;
             color: #333;
         }
 
@@ -726,33 +735,51 @@
             border-radius: 12px;
             overflow: hidden;
             margin-bottom: 20px;
+            background: #fff;
         }
 
-        .bw-guests-row {
-            display: flex;
-        }
-
-        .bw-guests-cell {
-            flex: 1;
-            padding: 12px 16px;
-        }
-
-        .bw-guests-cell:first-child {
-            border-right: 0.5px solid #e0ddd8;
-        }
-
-        .bw-guests-label {
+        .bw-guests-header {
             font-size: 10px;
             text-transform: uppercase;
             letter-spacing: 0.7px;
             color: #999;
-            margin-bottom: 2px;
+            padding: 12px 16px;
+            border-bottom: 0.5px solid #e0ddd8;
+            font-weight: 600;
         }
 
-        .bw-guests-value {
+        .dist-grid {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            padding: 16px;
+            /* Slight tint to differentiate from room boxes */
+        }
+
+        .dist-box {
+            flex: 1;
+            min-width: 140px;
+            background: #fff;
+            border: 1px solid #eee;
+            border-radius: 12px;
+            padding: 12px 16px;
+        }
+
+        .dist-box-label {
+            font-size: 12px;
+            color: #999;
+            margin-bottom: 4px;
+        }
+
+        .dist-box-val {
             font-size: 14px;
-            font-weight: 500;
-            color: #333;
+            font-weight: 700;
+            color: #1a1a1a;
+        }
+
+        .dist-box-val span {
+            margin: 0 4px;
+            color: #ccc;
         }
 
         .bw-selected-room {
@@ -1090,15 +1117,9 @@
                             </div>
                         </div>
                         <div class="bw-guests">
-                            <div class="bw-guests-row">
-                                <div class="bw-guests-cell">
-                                    <div class="bw-guests-label">Adultos</div>
-                                    <div class="bw-guests-value" id="bw-guests">...</div>
-                                </div>
-                                <div class="bw-guests-cell">
-                                    <div class="bw-guests-label">Habitaciones</div>
-                                    <div class="bw-guests-value" id="bw-rooms">...</div>
-                                </div>
+                            <div class="bw-guests-header" id="bw-dist-header">Cargando...</div>
+                            <div class="dist-grid" id="bw-rooms-detail">
+                                <!-- Rooms injected by JS -->
                             </div>
                         </div>
 
@@ -1156,168 +1177,182 @@
     </div>
 
     <script>
-    // ── SEARCH MIX MODULE (Adapted for hotel page) ──────────────────
-    const SearchMix = {
-        rooms: [{ adults: parseInt(new URLSearchParams(window.location.search).get('adults')) || 2, children: [] }],
-        
-        toggleGuest() {
-            const panel = document.getElementById('guest-hub-panel');
-            panel.classList.toggle('active');
-            if (panel.classList.contains('active')) this.renderRooms();
-        },
+        // ── SEARCH MIX MODULE (Adapted for hotel page) ──────────────────
+        const SearchMix = {
+            rooms: (function () {
+                const params = new URLSearchParams(window.location.search);
+                const config = params.get('rooms_config');
+                if (config) {
+                    try { return JSON.parse(decodeURIComponent(config)); } catch (e) { console.error('Rooms config error:', e); }
+                }
+                return [{ adults: parseInt(params.get('adults')) || 2, children: [] }];
+            })(),
 
-        adjustRoom(idx, type, delta) {
-            const r = this.rooms[idx-1];
-            if (!r) return;
-            if (type === 'adults') {
-                r.adults = Math.max(1, Math.min(6, r.adults + delta));
-            }
-            this.renderRooms();
-            this.syncInputs();
-        },
+            toggleGuest() {
+                const panel = document.getElementById('guest-hub-panel');
+                panel.classList.toggle('active');
+                if (panel.classList.contains('active')) this.renderRooms();
+            },
 
-        addChild(roomIdx) {
-            const r = this.rooms[roomIdx-1];
-            if (r.children.length >= 4) return;
-            r.children.push(8);
-            this.renderRooms();
-            this.syncInputs();
-        },
+            adjustRoom(idx, type, delta) {
+                const r = this.rooms[idx - 1];
+                if (!r) return;
+                if (type === 'adults') {
+                    r.adults = Math.max(1, Math.min(6, r.adults + delta));
+                }
+                this.renderRooms();
+                this.syncInputs();
+            },
 
-        removeChild(roomIdx, childIdx) {
-            this.rooms[roomIdx-1].children.splice(childIdx, 1);
-            this.renderRooms();
-            this.syncInputs();
-        },
+            addChild(roomIdx) {
+                const r = this.rooms[roomIdx - 1];
+                if (r.children.length >= 4) return;
+                r.children.push(8);
+                this.renderRooms();
+                this.syncInputs();
+            },
 
-        setChildAge(roomIdx, childIdx, age) {
-            this.rooms[roomIdx-1].children[childIdx] = parseInt(age);
-            this.syncInputs();
-        },
+            removeChild(roomIdx, childIdx) {
+                this.rooms[roomIdx - 1].children.splice(childIdx, 1);
+                this.renderRooms();
+                this.syncInputs();
+            },
 
-        addRoom() {
-            if (this.rooms.length >= 4) return;
-            this.rooms.push({ adults: 2, children: [] });
-            this.renderRooms();
-            this.syncInputs();
-        },
+            setChildAge(roomIdx, childIdx, age) {
+                this.rooms[roomIdx - 1].children[childIdx] = parseInt(age);
+                this.syncInputs();
+            },
 
-        renderRooms() {
-            const container = document.getElementById('rooms-container');
-            if (!container) return;
-            container.innerHTML = '';
-            this.rooms.forEach((room, i) => {
-                const idx = i + 1;
-                const block = document.createElement('div');
-                block.className = 'room-block';
-                block.innerHTML = `
-                    <div class="room-header" style="font-size:12px; margin-bottom:10px; font-weight:700; color:var(--t); display:flex; align-items:center; gap:6px;">
-                        <span>Habitación ${idx}</span>
-                        ${idx > 1 ? `<span onclick="SearchMix.removeRoom(${idx})" style="margin-left:auto; cursor:pointer; opacity:0.5; color:#1a1a1a;">✕</span>` : ''}
-                    </div>
-                    <div class="hub-row" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; color:#1a1a1a;">
-                        <span style="font-size:13px; font-weight:500;">Adultos</span>
-                        <div class="hub-ctrl" style="display:flex; align-items:center; gap:10px;">
-                            <button type="button" class="hub-btn" onclick="SearchMix.adjustRoom(${idx},'adults',-1)" style="width:28px; height:28px; border-radius:50%; border:1px solid #ddd; background:#fff; color:#1a1a1a; display:flex; align-items:center; justify-content:center; cursor:pointer;">−</button>
-                            <span style="font-weight:700; min-width:14px; text-align:center; font-size:14px;">${room.adults}</span>
-                            <button type="button" class="hub-btn" onclick="SearchMix.adjustRoom(${idx},'adults',1)" style="width:28px; height:28px; border-radius:50%; border:1px solid #ddd; background:#fff; color:#1a1a1a; display:flex; align-items:center; justify-content:center; cursor:pointer;">+</button>
-                        </div>
-                    </div>
-                    <div id="room-${idx}-children"></div>
-                    <button type="button" class="add-child-btn" onclick="SearchMix.addChild(${idx})" style="background:none; border:none; color:var(--t); font-size:11px; font-weight:700; cursor:pointer; padding:4px 0;">+ Añadir niño</button>
-                `;
-                container.appendChild(block);
-                this.renderChildren(idx);
-            });
-        },
+            addRoom() {
+                if (this.rooms.length >= 4) return;
+                this.rooms.push({ adults: 2, children: [] });
+                this.renderRooms();
+                this.syncInputs();
+            },
 
-        renderChildren(roomIdx) {
-            const r = this.rooms[roomIdx-1];
-            const cont = document.getElementById(`room-${roomIdx}-children`);
-            if (!cont) return;
-            cont.innerHTML = r.children.map((age, cIdx) => `
-                <div class="hub-row" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; color:#1a1a1a;">
-                    <span style="font-size:12px; font-weight:500;">Niño ${cIdx+1}</span>
-                    <div style="display:flex; align-items:center; gap:8px;">
-                        <select onchange="SearchMix.setChildAge(${roomIdx}, ${cIdx}, this.value)" style="font-size:12px; border-radius:8px; border:1px solid #ddd; padding:4px 8px; background:#f9f9f9; color:#1a1a1a; cursor:pointer;">
-                            ${[...Array(18).keys()].map(a => `<option value="${a}" ${a==age?'selected':''}>${a} años</option>`).join('')}
-                        </select>
-                        <span onclick="SearchMix.removeChild(${roomIdx}, ${cIdx})" style="cursor:pointer; opacity:0.4; font-size:14px; color:#1a1a1a; padding:4px;">✕</span>
-                    </div>
-                </div>
-            `).join('');
-        },
-
-        removeRoom(idx) {
-            this.rooms.splice(idx-1, 1);
-            this.renderRooms();
-            this.syncInputs();
-        },
-
-        syncInputs() {
-            const adults = this.rooms.reduce((s, r) => s + r.adults, 0);
-            const rooms = this.rooms.length;
-            document.getElementById('adults-input').value = adults;
-            document.getElementById('rooms-input').value = rooms;
-            document.getElementById('guest-summary').textContent = `${adults} adultos · ${rooms} hab`;
-        },
-
-        _destTimer: null,
-        onDestInput(val) {
-            const box = document.getElementById('dest-suggestions');
-            clearTimeout(this._destTimer);
-            if (val.length < 3) { box.style.display = 'none'; return; }
-            this._destTimer = setTimeout(() => this.fetchSuggestions(val), 300);
-        },
-
-        async fetchSuggestions(query) {
-            const box = document.getElementById('dest-suggestions');
-            try {
-                const res = await fetch('/api/suggest', {
-                    method: 'POST',
-                    headers: { 
-                        'Content-Type': 'application/json', 
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content 
-                    },
-                    body: JSON.stringify({ q: query, language: 'es' })
+            renderRooms() {
+                const container = document.getElementById('rooms-container');
+                if (!container) return;
+                container.innerHTML = '';
+                this.rooms.forEach((room, i) => {
+                    const idx = i + 1;
+                    const block = document.createElement('div');
+                    block.className = 'room-block';
+                    block.innerHTML = `
+                            <div class="room-header" style="font-size:12px; margin-bottom:10px; font-weight:700; color:var(--t); display:flex; align-items:center; gap:6px;">
+                                <span>Habitación ${idx}</span>
+                                ${idx > 1 ? `<span onclick="SearchMix.removeRoom(${idx})" style="margin-left:auto; cursor:pointer; opacity:0.5; color:#1a1a1a;">✕</span>` : ''}
+                            </div>
+                            <div class="hub-row" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; color:#1a1a1a;">
+                                <span style="font-size:13px; font-weight:500;">Adultos</span>
+                                <div class="hub-ctrl" style="display:flex; align-items:center; gap:10px;">
+                                    <button type="button" class="hub-btn" onclick="SearchMix.adjustRoom(${idx},'adults',-1)" style="width:28px; height:28px; border-radius:50%; border:1px solid #ddd; background:#fff; color:#1a1a1a; display:flex; align-items:center; justify-content:center; cursor:pointer;">−</button>
+                                    <span style="font-weight:700; min-width:14px; text-align:center; font-size:14px;">${room.adults}</span>
+                                    <button type="button" class="hub-btn" onclick="SearchMix.adjustRoom(${idx},'adults',1)" style="width:28px; height:28px; border-radius:50%; border:1px solid #ddd; background:#fff; color:#1a1a1a; display:flex; align-items:center; justify-content:center; cursor:pointer;">+</button>
+                                </div>
+                            </div>
+                            <div id="room-${idx}-children"></div>
+                            <button type="button" class="add-child-btn" onclick="SearchMix.addChild(${idx})" style="background:none; border:none; color:var(--t); font-size:11px; font-weight:700; cursor:pointer; padding:4px 0;">+ Añadir niño</button>
+                        `;
+                    container.appendChild(block);
+                    this.renderChildren(idx);
                 });
-                const data = await res.json();
-                const items = data?.data || [];
-                if (!items.length) { box.style.display = 'none'; return; }
-                box.innerHTML = items.slice(0, 7).map(item => `
-                    <div style="padding:10px 14px; cursor:pointer; font-size:13px; border-bottom:1px solid #f0ede8; color:#1a1a1a;" 
-                         onmouseenter="this.style.background='#fdf3f0'" onmouseleave="this.style.background=''"
-                         onclick="SearchMix.selectDest(${item.id}, '${item.name.replace(/'/g, "\\'")}')">
-                        ${item.type==='hotel'?'🏨':'📍'} <strong>${item.name}</strong> <small style="color:#999">${item.country_name || ''}</small>
-                    </div>
-                `).join('');
-                box.style.display = 'block';
-            } catch(e) { console.error(e); }
-        },
+            },
 
-        selectDest(id, name) {
-            document.getElementById('dest').value = name;
-            document.getElementById('region-id-input').value = id;
-            document.getElementById('dest-suggestions').style.display = 'none';
-        },
+            renderChildren(roomIdx) {
+                const r = this.rooms[roomIdx - 1];
+                const cont = document.getElementById(`room-${roomIdx}-children`);
+                if (!cont) return;
+                cont.innerHTML = r.children.map((age, cIdx) => `
+                        <div class="hub-row" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; color:#1a1a1a;">
+                            <span style="font-size:12px; font-weight:500;">Niño ${cIdx + 1}</span>
+                            <div style="display:flex; align-items:center; gap:8px;">
+                                <select onchange="SearchMix.setChildAge(${roomIdx}, ${cIdx}, this.value)" style="font-size:12px; border-radius:8px; border:1px solid #ddd; padding:4px 8px; background:#f9f9f9; color:#1a1a1a; cursor:pointer;">
+                                    ${[...Array(18).keys()].map(a => `<option value="${a}" ${a == age ? 'selected' : ''}>${a} años</option>`).join('')}
+                                </select>
+                                <span onclick="SearchMix.removeChild(${roomIdx}, ${cIdx})" style="cursor:pointer; opacity:0.4; font-size:14px; color:#1a1a1a; padding:4px;">✕</span>
+                            </div>
+                        </div>
+                    `).join('');
+            },
 
-        onCheckinChange(val) {
-            const cout = document.getElementById('cout');
-            if (cout) cout.min = val;
-        },
+            removeRoom(idx) {
+                this.rooms.splice(idx - 1, 1);
+                this.renderRooms();
+                this.syncInputs();
+            },
 
-        validateSearch(e) {
-            if (!document.getElementById('region-id-input').value) {
-                alert('Por favor selecciona un destino de la lista');
-                e.preventDefault();
-                return false;
+            syncInputs() {
+                const adults = this.rooms.reduce((s, r) => s + r.adults, 0);
+                const children = this.rooms.reduce((s, r) => s + r.children.length, 0);
+                const rooms = this.rooms.length;
+                const total = adults + children;
+
+                document.getElementById('adults-input').value = adults;
+                document.getElementById('children-input').value = children;
+                document.getElementById('rooms-input').value = rooms;
+                document.getElementById('rooms-config-input').value = JSON.stringify(this.rooms);
+
+                let label = children > 0 ? (total > 1 ? 'huéspedes' : 'huésped') : (adults > 1 ? 'adultos' : 'adulto');
+                document.getElementById('guest-summary').textContent = `${total} ${label} · ${rooms} hab`;
+            },
+
+            _destTimer: null,
+            onDestInput(val) {
+                const box = document.getElementById('dest-suggestions');
+                clearTimeout(this._destTimer);
+                if (val.length < 3) { box.style.display = 'none'; return; }
+                this._destTimer = setTimeout(() => this.fetchSuggestions(val), 300);
+            },
+
+            async fetchSuggestions(query) {
+                const box = document.getElementById('dest-suggestions');
+                try {
+                    const res = await fetch('/api/suggest', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                        },
+                        body: JSON.stringify({ q: query, language: 'es' })
+                    });
+                    const data = await res.json();
+                    const items = data?.data || [];
+                    if (!items.length) { box.style.display = 'none'; return; }
+                    box.innerHTML = items.slice(0, 7).map(item => `
+                            <div style="padding:10px 14px; cursor:pointer; font-size:13px; border-bottom:1px solid #f0ede8; color:#1a1a1a;" 
+                                 onmouseenter="this.style.background='#fdf3f0'" onmouseleave="this.style.background=''"
+                                 onclick="SearchMix.selectDest(${item.id}, '${item.name.replace(/'/g, "\\'")}')">
+                                ${item.type === 'hotel' ? '🏨' : '📍'} <strong>${item.name}</strong> <small style="color:#999">${item.country_name || ''}</small>
+                            </div>
+                        `).join('');
+                    box.style.display = 'block';
+                } catch (e) { console.error(e); }
+            },
+
+            selectDest(id, name) {
+                document.getElementById('dest').value = name;
+                document.getElementById('region-id-input').value = id;
+                document.getElementById('dest-suggestions').style.display = 'none';
+            },
+
+            onCheckinChange(val) {
+                const cout = document.getElementById('cout');
+                if (cout) cout.min = val;
+            },
+
+            validateSearch(e) {
+                if (!document.getElementById('region-id-input').value) {
+                    alert('Por favor selecciona un destino de la lista');
+                    e.preventDefault();
+                    return false;
+                }
+                showLoader();
+                return true;
             }
-            showLoader();
-            return true;
-        }
-    };
+        };
 
-    const hotelPage = {
+        const hotelPage = {
             id: '{{ $id }}',
             data: null,
             images: [],
@@ -1415,12 +1450,12 @@
                     // Note: Replace YOUR_API_KEY_HERE with actual key or just keep stub if map api is not available.
                     // Since we might not have a Google Maps key here, let's keep it as a stylized stub with dynamic text:
                     document.getElementById('map-stub').innerHTML = `
-                            <div style="text-align:center;">
-                                <div style="font-size:24px; margin-bottom:8px;">📍</div>
-                                <div style="font-size:15px; font-weight:600; color:#333;">${hotel.address || hotel.city}</div>
-                                <div style="font-size:12px; color:#888; margin-top:4px;">Coordenadas: ${lat}, ${lng}</div>
-                            </div>
-                        `;
+                                    <div style="text-align:center;">
+                                        <div style="font-size:24px; margin-bottom:8px;">📍</div>
+                                        <div style="font-size:15px; font-weight:600; color:#333;">${hotel.address || hotel.city}</div>
+                                        <div style="font-size:12px; color:#888; margin-top:4px;">Coordenadas: ${lat}, ${lng}</div>
+                                    </div>
+                                `;
                 } else {
                     document.getElementById('map-stub').innerHTML = `📍 ${hotel.address || hotel.city}`;
                 }
@@ -1435,49 +1470,73 @@
                 const p = (val) => (val * 10) + '%';
 
                 revBars.innerHTML = `
-                        <div class="r-bar-item"><div class="r-bar-label">Limpieza</div><div class="r-bar-track"><div class="r-bar-fill" style="width:${p(calcR(0.4))}"></div></div><div class="r-bar-val">${calcR(0.4)}</div></div>
-                        <div class="r-bar-item"><div class="r-bar-label">Servicio</div><div class="r-bar-track"><div class="r-bar-fill" style="width:${p(calcR(0.2))}"></div></div><div class="r-bar-val">${calcR(0.2)}</div></div>
-                        <div class="r-bar-item"><div class="r-bar-label">Ubicación</div><div class="r-bar-track"><div class="r-bar-fill" style="width:${p(calcR(0.8))}"></div></div><div class="r-bar-val">${calcR(0.8)}</div></div>
-                        <div class="r-bar-item"><div class="r-bar-label">Relación</div><div class="r-bar-track"><div class="r-bar-fill" style="width:${p(calcR(-0.5))}"></div></div><div class="r-bar-val">${calcR(-0.5)}</div></div>
-                    `;
+                                <div class="r-bar-item"><div class="r-bar-label">Limpieza</div><div class="r-bar-track"><div class="r-bar-fill" style="width:${p(calcR(0.4))}"></div></div><div class="r-bar-val">${calcR(0.4)}</div></div>
+                                <div class="r-bar-item"><div class="r-bar-label">Servicio</div><div class="r-bar-track"><div class="r-bar-fill" style="width:${p(calcR(0.2))}"></div></div><div class="r-bar-val">${calcR(0.2)}</div></div>
+                                <div class="r-bar-item"><div class="r-bar-label">Ubicación</div><div class="r-bar-track"><div class="r-bar-fill" style="width:${p(calcR(0.8))}"></div></div><div class="r-bar-val">${calcR(0.8)}</div></div>
+                                <div class="r-bar-item"><div class="r-bar-label">Relación</div><div class="r-bar-track"><div class="r-bar-fill" style="width:${p(calcR(-0.5))}"></div></div><div class="r-bar-val">${calcR(-0.5)}</div></div>
+                            `;
 
                 // Dynamic Comments (if available from API, otherwise a generic fallback)
                 if (hotel.reviews_data && hotel.reviews_data.length > 0) {
                     dynRev.innerHTML = hotel.reviews_data.slice(0, 5).map(r => `
-                            <div class="review-card">
-                                <div class="rc-header">
-                                    <div class="rc-avatar">${r.author.charAt(0).toUpperCase()}</div>
-                                    <div><div class="rc-name">${r.author}</div><div class="rc-meta">${r.date || 'Recientemente'} · <span style="color:#e85d2f">★ ${r.score || ''}</span></div></div>
-                                </div>
-                                <div class="rc-text">${r.text}</div>
-                            </div>
-                        `).join('');
+                                    <div class="review-card">
+                                        <div class="rc-header">
+                                            <div class="rc-avatar">${r.author.charAt(0).toUpperCase()}</div>
+                                            <div><div class="rc-name">${r.author}</div><div class="rc-meta">${r.date || 'Recientemente'} · <span style="color:#e85d2f">★ ${r.score || ''}</span></div></div>
+                                        </div>
+                                        <div class="rc-text">${r.text}</div>
+                                    </div>
+                                `).join('');
                 } else {
                     // Mock reviews but personalized to the hotel name
                     dynRev.innerHTML = `
-                            <div class="review-card">
-                                <div class="rc-header">
-                                    <div class="rc-avatar">V</div>
-                                    <div><div class="rc-name">Viajero Verificado</div><div class="rc-meta">Recientemente · <span style="color:#e85d2f">★★★★★</span></div></div>
-                                </div>
-                                <div class="rc-text">Me encantó hospedarme en ${hotel.name}. Las instalaciones están muy bien mantenidas y el servicio es bastante bueno. Excelente opción en ${hotel.city}.</div>
-                            </div>
-                            <div class="review-card">
-                                <div class="rc-header">
-                                    <div class="rc-avatar" style="background:#eaf2fb; color:#2c74c9;">A</div>
-                                    <div><div class="rc-name">Anónimo</div><div class="rc-meta">Hace un mes · <span style="color:#e85d2f">★★★★☆</span></div></div>
-                                </div>
-                                <div class="rc-text">La ubicación es ideal para moverse por la ciudad. La habitación era cómoda y limpia. Sin duda volvería a reservar aquí a través de Nestay.</div>
-                            </div>
-                        `;
+                                    <div class="review-card">
+                                        <div class="rc-header">
+                                            <div class="rc-avatar">V</div>
+                                            <div><div class="rc-name">Viajero Verificado</div><div class="rc-meta">Recientemente · <span style="color:#e85d2f">★★★★★</span></div></div>
+                                        </div>
+                                        <div class="rc-text">Me encantó hospedarme en ${hotel.name}. Las instalaciones están muy bien mantenidas y el servicio es bastante bueno. Excelente opción en ${hotel.city}.</div>
+                                    </div>
+                                    <div class="review-card">
+                                        <div class="rc-header">
+                                            <div class="rc-avatar" style="background:#eaf2fb; color:#2c74c9;">A</div>
+                                            <div><div class="rc-name">Anónimo</div><div class="rc-meta">Hace un mes · <span style="color:#e85d2f">★★★★☆</span></div></div>
+                                        </div>
+                                        <div class="rc-text">La ubicación es ideal para moverse por la ciudad. La habitación era cómoda y limpia. Sin duda volvería a reservar aquí a través de Nestay.</div>
+                                    </div>
+                                `;
                 }
 
                 // Booking Widget setup
                 const params = new URLSearchParams(window.location.search);
                 document.getElementById('bw-cin').textContent = this.formatDate(params.get('check_in'));
                 document.getElementById('bw-cout').textContent = this.formatDate(params.get('check_out'));
-                document.getElementById('bw-guests').textContent = `${params.get('adults') || 2}`;
-                document.getElementById('bw-rooms').textContent = `${params.get('rooms') || 1}`;
+
+                const adultsTotal = SearchMix.rooms.reduce((s, r) => s + r.adults, 0);
+                const childrenTotal = SearchMix.rooms.reduce((s, r) => s + r.children.length, 0);
+                const roomsCount = SearchMix.rooms.length;
+
+                // Calculate nights
+                const cin = new Date(params.get('check_in'));
+                const cout = new Date(params.get('check_out'));
+                const nights = Math.max(1, Math.round((cout - cin) / (1000 * 60 * 60 * 24)));
+
+                const headerText = `${nights} NOCHE${nights > 1 ? 'S' : ''} · ${roomsCount} HABITACIÓN${roomsCount > 1 ? 'ES' : ''}`;
+                document.getElementById('bw-dist-header').textContent = headerText;
+
+                if (SearchMix.rooms.length > 0) {
+                    const detailEl = document.getElementById('bw-rooms-detail');
+                    detailEl.innerHTML = SearchMix.rooms.map((r, i) => {
+                        let rText = `${r.adults} adulto${r.adults > 1 ? 's' : ''}`;
+                        if (r.children.length > 0) rText += ` <span>·</span> ${r.children.length} niño${r.children.length > 1 ? 's' : ''}`;
+                        return `
+                                    <div class="dist-box">
+                                        <div class="dist-box-label">Habitación ${i + 1}</div>
+                                        <div class="dist-box-val">${rText}</div>
+                                    </div>
+                                `;
+                    }).join('');
+                }
 
                 // Render Rates in MAIN COLUMN
                 const roomsListDiv = document.getElementById('rooms-list');
@@ -1489,24 +1548,24 @@
                     roomsListDiv.innerHTML = rates.slice(0, 5).map((r, i) => {
                         const amenitiesHtml = (r.amenities || []).slice(0, 3).map(a => `<span class="rtag">${a}</span>`).join('');
                         return `
-                            <div class="room-item ${i === 0 ? 'selected' : ''}" id="room-card-${i}" onclick="hotelPage.selectRate(${i})">
-                                <div class="room-info">
-                                    <div class="room-name">${r.room_name || 'Habitación Estándar'}</div>
-                                    <div class="room-meal">
-                                        <span class="room-meal-icon">🍽</span>
-                                        ${r.meal_label || 'Solo alojamiento'}
-                                    </div>
-                                    <div class="room-tags">${amenitiesHtml}</div>
-                                    ${r.refundable ? '<div style="margin-top:8px; font-size:11px; color:#2c74c9; font-weight:600;">✓ Cancelación gratuita</div>' : '<div style="margin-top:8px; font-size:11px; color:#555;">No reembolsable</div>'}
-                                </div>
-                                <div class="room-action">
-                                    <div style="text-align:right;">
-                                        <div class="room-price-total">$${Math.round(r.total_price)}</div>
-                                        <div class="room-price-night">Total estancia</div>
-                                    </div>
-                                    <button class="room-btn" id="room-btn-${i}">${i === 0 ? 'Seleccionada' : 'Seleccionar'}</button>
-                                </div>
-                            </div>`;
+                                    <div class="room-item ${i === 0 ? 'selected' : ''}" id="room-card-${i}" onclick="hotelPage.selectRate(${i})">
+                                        <div class="room-info">
+                                            <div class="room-name">${r.room_name || 'Habitación Estándar'}</div>
+                                            <div class="room-meal">
+                                                <span class="room-meal-icon">🍽</span>
+                                                ${r.meal_label || 'Solo alojamiento'}
+                                            </div>
+                                            <div class="room-tags">${amenitiesHtml}</div>
+                                            ${r.refundable ? '<div style="margin-top:8px; font-size:11px; color:#2c74c9; font-weight:600;">✓ Cancelación gratuita</div>' : '<div style="margin-top:8px; font-size:11px; color:#555;">No reembolsable</div>'}
+                                        </div>
+                                        <div class="room-action">
+                                            <div style="text-align:right;">
+                                                <div class="room-price-total">$${Math.round(r.total_price)}</div>
+                                                <div class="room-price-night">Total estancia</div>
+                                            </div>
+                                            <button class="room-btn" id="room-btn-${i}">${i === 0 ? 'Seleccionada' : 'Seleccionar'}</button>
+                                        </div>
+                                    </div>`;
                     }).join('');
                     this.selectRate(0); // auto-select cheapest
                 } else {
@@ -1530,9 +1589,9 @@
 
                 let html = `<div class="gallery-main-row">`;
                 html += `<div class="gallery-hero" onclick="hotelPage.openLightbox(0)">
-                                <img src="${imgs[0]}" alt="Hero">
-                                <div class="gallery-hover"></div>
-                             </div>`;
+                                        <img src="${imgs[0]}" alt="Hero">
+                                        <div class="gallery-hover"></div>
+                                     </div>`;
 
                 if (imgs.length > 1) {
                     html += `<div class="gallery-side">`;
@@ -1551,13 +1610,13 @@
                     }
                     if (imgs.length > 7) {
                         html += `
-                            <div class="gallery-strip-item view-all-btn" onclick="hotelPage.openLightbox(7)">
-                                <img src="${imgs[7]}">
-                                <div class="view-all-label">
-                                    <span style="font-size:24px">🖼</span>
-                                    <span>+${imgs.length - 7} fotos</span>
-                                </div>
-                            </div>`;
+                                    <div class="gallery-strip-item view-all-btn" onclick="hotelPage.openLightbox(7)">
+                                        <img src="${imgs[7]}">
+                                        <div class="view-all-label">
+                                            <span style="font-size:24px">🖼</span>
+                                            <span>+${imgs.length - 7} fotos</span>
+                                        </div>
+                                    </div>`;
                     }
                     html += `</div>`;
                 }
@@ -1617,7 +1676,10 @@
                     hotel_stars: h.stars || 0,
                     check_in: params.get('check_in'),
                     check_out: params.get('check_out'),
-                    guests: params.get('adults'),
+                    guests: params.get('adults') || 2,
+                    children: params.get('children') || 0,
+                    rooms: params.get('rooms') || 1,
+                    rooms_config: params.get('rooms_config') || '',
                     room_name: this.selectedRate.room_name || 'Habitación',
                     meal_label: this.selectedRate.meal_label || '',
                     refundable: this.selectedRate.refundable ? '1' : '0',

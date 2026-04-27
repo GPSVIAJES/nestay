@@ -334,8 +334,13 @@ class BookingService
                 'check_in'            => $apiData['rate']['check_in']    ?? $inputData['check_in'],
                 'check_out'           => $apiData['rate']['check_out']   ?? $inputData['check_out'],
                 'guests'              => $inputData['guests']            ?? 1,
-                'rooms'               => count($inputData['rooms'] ?? []) ?: 1,
-                'rooms_data'          => json_encode($apiData['rate']    ?? []),
+                'children'            => $inputData['children']          ?? 0,
+                'rooms'               => count($inputData['rooms'] ?? []) ?: ($inputData['rooms_count'] ?? 1),
+                'rooms_data'          => json_encode([
+                    'api_rate'     => $apiData['rate'] ?? [],
+                    'rooms_config' => $inputData['rooms_config'] ?? null,
+                    'rooms_detail' => $inputData['rooms'] ?? []
+                ]),
                 'total_price'         => $apiData['rate']['total_price'] ?? $inputData['total_price'] ?? 0,
                 'currency'            => $apiData['rate']['currency']    ?? $inputData['currency']    ?? 'USD',
                 'guest_first_name'    => $inputData['guest']['first_name'],

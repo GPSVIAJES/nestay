@@ -66,6 +66,7 @@
                                     <input type="hidden" name="adults" id="adults-input" value="2">
                                     <input type="hidden" name="children" id="children-input" value="0">
                                     <input type="hidden" name="rooms" id="rooms-input" value="1">
+                                    <input type="hidden" name="rooms_config" id="rooms-config-input" value="">
                                 </div>
 
                                 <!-- GUEST PANEL — Room-based layout (Nested) -->
@@ -678,7 +679,14 @@
 
     <script>
         const SearchMix = {
-            rooms: [{ adults: 2, children: [] }],
+            rooms: (function() {
+                const params = new URLSearchParams(window.location.search);
+                const config = params.get('rooms_config');
+                if (config) {
+                    try { return JSON.parse(decodeURIComponent(config)); } catch(e) { console.error('Rooms config error:', e); }
+                }
+                return [{ adults: parseInt(params.get('adults')) || 2, children: [] }];
+            })(),
             roomCounter: 1,
 
             toggleGuest() {
@@ -826,9 +834,10 @@
                 document.getElementById('adults-input').value = totalAdults;
                 document.getElementById('children-input').value = totalChildren;
                 document.getElementById('rooms-input').value = totalRooms;
+                document.getElementById('rooms-config-input').value = JSON.stringify(this.rooms);
 
-                let summary = `${totalGuests} huésped${totalGuests > 1 ? 'es' : ''}`;
-                summary += ` · ${totalRooms} hab${totalRooms > 1 ? 's' : ''}`;
+                let label = totalChildren > 0 ? (totalGuests > 1 ? 'huéspedes' : 'huésped') : (totalAdults > 1 ? 'adultos' : 'adulto');
+                let summary = `${totalGuests} ${label} · ${totalRooms} hab`;
                 
                 const summaryEl = document.getElementById('guest-summary');
                 summaryEl.innerText = summary;

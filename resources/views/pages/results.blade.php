@@ -587,12 +587,20 @@
         {{-- Huéspedes --}}
         <div style="flex:1; min-width:0; padding:0 16px; position:relative;">
             <div style="font-size:9px; font-weight:700; letter-spacing:.8px; text-transform:uppercase; color:#888; margin-bottom:2px;">Huéspedes</div>
+            @php
+                $adults = request('adults', 2);
+                $children = request('children', 0);
+                $rooms = request('rooms', 1);
+                $total = $adults + $children;
+                $label = $children > 0 ? ($total > 1 ? 'huéspedes' : 'huésped') : ($adults > 1 ? 'adultos' : 'adulto');
+            @endphp
             <div onclick="SearchMix.toggleGuest()" style="color:#fff; font-size:13px; font-weight:500; cursor:pointer; white-space:nowrap;" id="guest-summary">
-                {{ request('adults', 2) }} adultos · {{ request('rooms', 1) }} hab
+                {{ $total }} {{ $label }} · {{ $rooms }} hab
             </div>
-            <input type="hidden" name="adults" id="adults-input" value="{{ request('adults', 2) }}">
-            <input type="hidden" name="rooms" id="rooms-input" value="{{ request('rooms', 1) }}">
-            <input type="hidden" name="children" id="children-input" value="{{ request('children', 0) }}">
+            <input type="hidden" name="adults" id="adults-input" value="{{ $adults }}">
+            <input type="hidden" name="rooms" id="rooms-input" value="{{ $rooms }}">
+            <input type="hidden" name="children" id="children-input" value="{{ $children }}">
+            <input type="hidden" name="rooms_config" id="rooms-config-input" value="{{ request('rooms_config') }}">
             <div class="guest-hub-panel" id="guest-hub-panel" style="top:110%; right:0; left:auto; width:290px; padding:20px; background:#fff; border-radius:18px; border:1px solid #eee; box-shadow:0 16px 48px rgba(0,0,0,0.15); color: #1a1a1a;">
                 <div id="rooms-container"></div>
                 <button type="button" onclick="SearchMix.addRoom()" style="width:100%; background:none; border:1.5px dashed #ddd; border-radius:10px; padding:8px; font-size:12px; color:#999; cursor:pointer; margin-top:10px;">+ Agregar habitación</button>
@@ -601,7 +609,7 @@
         </div>
 
         {{-- Botón buscar --}}
-        <button type="submit" style="background:#e85d2f; border:none; border-radius:50px; color:#fff; font-size:13px; font-weight:700; padding:12px 24px; cursor:pointer; white-space:nowrap; flex-shrink:0; display:flex; align-items:center; gap:8px; transition:transform .2s;" onmouseover="this.style.transform='scale(1.03)'" onmouseout="this.style.transform='scale(1)'">
+        <button type="submit" style="margin-left: 12px; background:#e85d2f; border:none; border-radius:50px; color:#fff; font-size:13px; font-weight:700; padding:12px 24px; cursor:pointer; white-space:nowrap; flex-shrink:0; display:flex; align-items:center; gap:8px; transition:transform .2s;" onmouseover="this.style.transform='scale(1.03)'" onmouseout="this.style.transform='scale(1)'">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
             Buscar
         </button>
@@ -693,7 +701,14 @@
 <script>
     // ── SEARCH MIX MODULE (Adapted for results page) ──────────────────
     const SearchMix = {
-        rooms: [{ adults: parseInt(new URLSearchParams(window.location.search).get('adults')) || 2, children: [] }],
+        rooms: (function() {
+            const params = new URLSearchParams(window.location.search);
+            const config = params.get('rooms_config');
+            if (config) {
+                try { return JSON.parse(decodeURIComponent(config)); } catch(e) { console.error('Rooms config error:', e); }
+            }
+            return [{ adults: parseInt(params.get('adults')) || 2, children: [] }];
+        })(),
         
         toggleGuest() {
             const panel = document.getElementById('guest-hub-panel');
@@ -790,10 +805,17 @@
 
         syncInputs() {
             const adults = this.rooms.reduce((s, r) => s + r.adults, 0);
+            const children = this.rooms.reduce((s, r) => s + r.children.length, 0);
             const rooms = this.rooms.length;
+            const total = adults + children;
+
             document.getElementById('adults-input').value = adults;
+            document.getElementById('children-input').value = children;
             document.getElementById('rooms-input').value = rooms;
-            document.getElementById('guest-summary').textContent = `${adults} ad · ${rooms} hab`;
+            document.getElementById('rooms-config-input').value = JSON.stringify(this.rooms);
+
+            let label = children > 0 ? (total > 1 ? 'huéspedes' : 'huésped') : (adults > 1 ? 'adultos' : 'adulto');
+            document.getElementById('guest-summary').textContent = `${total} ${label} · ${rooms} hab`;
         },
 
         _destTimer: null,

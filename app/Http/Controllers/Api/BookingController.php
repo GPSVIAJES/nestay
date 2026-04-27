@@ -114,6 +114,7 @@ class BookingController extends Controller
             'check_in'            => 'required|date',
             'check_out'           => 'required|date|after:check_in',
             'guests'              => 'required|integer|min:1',
+            'children'            => 'nullable|integer|min:0',
             'currency'            => 'nullable|string|size:3',
             'total_price'         => 'required|numeric|min:0',
             'cancellation_policy' => 'nullable|string',

@@ -289,7 +289,56 @@
         
         document.getElementById('summary-in').textContent = window.formatDate ? window.formatDate(checkin) : checkin;
         document.getElementById('summary-out').textContent = window.formatDate ? window.formatDate(checkout) : checkout;
-        document.getElementById('summary-guests').textContent = `${guests} adulto${guests > 1 ? 's' : ''}`;
+        
+        const children = parseInt(bookingParams.get('children')) || 0;
+        const roomsCount = parseInt(bookingParams.get('rooms')) || 1;
+        let gSummary = `${guests} adulto${guests > 1 ? 's' : ''}`;
+        if (children > 0) gSummary += ` · ${children} niño${children > 1 ? 's' : ''}`;
+        gSummary += ` · ${roomsCount} hab.`;
+
+        // Clear previous breakdown if any
+        const guestValEl = document.getElementById('summary-guests');
+        guestValEl.innerHTML = '';
+        guestValEl.style.display = 'flex';
+        guestValEl.style.flexDirection = 'column';
+        guestValEl.style.alignItems = 'flex-end';
+        guestValEl.style.flex = '1';
+        guestValEl.style.marginLeft = '20px';
+
+        const summaryDiv = document.createElement('div');
+        summaryDiv.style.fontWeight = '700';
+        summaryDiv.style.color = '#1a1a1a';
+        summaryDiv.textContent = gSummary;
+        guestValEl.appendChild(summaryDiv);
+
+        const roomsConfigStr = bookingParams.get('rooms_config');
+        if (roomsConfigStr) {
+            try {
+                const rConf = JSON.parse(decodeURIComponent(roomsConfigStr));
+                if (Array.isArray(rConf) && rConf.length > 0) {
+                    const breakdownCont = document.createElement('div');
+                    breakdownCont.style.marginTop = '6px';
+                    breakdownCont.style.width = '100%';
+                    
+                    rConf.forEach((r, i) => {
+                        let rt = `${r.adults} adulto${r.adults > 1 ? 's' : ''}`;
+                        if (r.children.length > 0) rt += ` · ${r.children.length} niño${r.children.length > 1 ? 's' : ''}`;
+                        
+                        const row = document.createElement('div');
+                        row.style.fontSize = '12px';
+                        row.style.color = '#1a1a1a';
+                        row.style.marginTop = '4px';
+                        row.style.display = 'flex';
+                        row.style.justifyContent = 'flex-end';
+                        row.style.gap = '8px';
+                        row.innerHTML = `<span style="color:#888;">Hab ${i+1}</span><span style="font-weight:600;">${rt}</span>`;
+                        breakdownCont.appendChild(row);
+                    });
+                    guestValEl.appendChild(breakdownCont);
+                }
+            } catch(e) { console.error('Rooms config parse error', e); }
+        }
+
         document.getElementById('summary-room').textContent = roomName;
         document.getElementById('summary-meal').textContent = mealLabel;
         document.getElementById('summary-price').textContent = `$${Math.round(price)}`;

@@ -734,9 +734,26 @@
           </div>
           <div class="detail-cell">
             <div class="dc-label">Huéspedes</div>
-            <div class="dc-value">{{ $booking->guests }}</div>
-            <div class="dc-value small" style="color:#888; font-weight:500; font-size:12px;">
-              adulto{{ $booking->guests != 1 ? 's' : '' }}</div>
+            <div style="display:flex; flex-direction:column; align-items:flex-end; flex:1; margin-left:20px;">
+              <div style="font-weight:700; color:#1a1a1a;">
+                {{ $booking->guests }} adulto{{ $booking->guests != 1 ? 's' : '' }}
+                @if($booking->children > 0) · {{ $booking->children }} niño{{ $booking->children != 1 ? 's' : '' }} @endif
+                · {{ $booking->rooms }} hab.
+              </div>
+              @if(isset($booking->rooms_data['rooms_config']))
+                @php $rConf = json_decode(urldecode($booking->rooms_data['rooms_config']), true); @endphp
+                @if(is_array($rConf))
+                  <div style="margin-top:6px; width:100%;">
+                    @foreach($rConf as $i => $r)
+                      <div style="font-size:12px; color:#1a1a1a; margin-top:4px; display:flex; justify-content:flex-end; gap:8px;">
+                        <span style="color:#888;">Hab {{ $i+1 }}</span>
+                        <span style="font-weight:600;">{{ $r['adults'] }} adulto{{ $r['adults'] != 1 ? 's' : '' }} @if(count($r['children']) > 0) · {{ count($r['children']) }} niño{{ count($r['children']) != 1 ? 's' : '' }} @endif</span>
+                      </div>
+                    @endforeach
+                  </div>
+                @endif
+              @endif
+            </div>
           </div>
           <div class="detail-cell">
             <div class="dc-label">Habitaciones</div>
