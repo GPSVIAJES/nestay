@@ -246,8 +246,8 @@
             <div class="summary-row"><span class="sr-label">Check-out</span><span class="sr-value" id="summary-out" style="font-weight: 600; color: #1a1a1a;">...</span></div>
             <div class="summary-row"><span class="sr-label">Huéspedes</span><span class="sr-value" id="summary-guests" style="font-weight: 600; color: #1a1a1a;">...</span></div>
             <div style="height: 1px; background: #eaeaea; margin: 12px 0;"></div>
-            <div class="summary-row"><span class="sr-label" style="color: #e85d2f; font-weight: 700;">Habitación</span><span class="sr-value" id="summary-room" style="font-weight: 700; color: #1a1a1a;">Estándar</span></div>
-            <div class="summary-row"><span class="sr-label" style="color: #e85d2f; font-weight: 700;">Régimen</span><span class="sr-value" id="summary-meal" style="font-weight: 700; color: #1a1a1a;">Solo alojamiento</span></div>
+            <div class="summary-row"><span class="sr-label" style="color: #e85d2f; font-weight: 700;">Habitación</span><span class="sr-value" id="summary-room" style="font-weight: 700; color: #1a1a1a; text-align: right;">Estándar</span></div>
+            <div class="summary-row"><span class="sr-label" style="color: #e85d2f; font-weight: 700;">Régimen</span><span class="sr-value" id="summary-meal" style="font-weight: 700; color: #1a1a1a; text-align: right;">Solo alojamiento</span></div>
           </div>
           <div class="price-box">
             <div class="price-label">Precio final</div>

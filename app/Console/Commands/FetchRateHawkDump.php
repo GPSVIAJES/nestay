@@ -9,7 +9,7 @@ use App\Models\Hotel;
 
 class FetchRateHawkDump extends Command
 {
-    protected $signature = 'ratehawk:fetch-dump {--language=es} {--import : Automatically import into database after extracting}';
+    protected $signature = 'ratehawk:fetch-dump {--language=es} {--import : Automatically import into database after extracting} {--limit= : Limit the number of hotels to import} {--sync : Delete hotels not present in the new dump}';
     protected $description = 'Fetches the hotel dump from RateHawk API, decompresses it, and optionally imports it.';
 
     public function handle(RateHawkClient $client)
@@ -74,10 +74,19 @@ class FetchRateHawkDump extends Command
         }
 
         $this->info("Decompression successful to {$decompressedFile}.");
+        
+        $syncStartTime = now();
 
         // Optional import phase
         if ($this->option('import')) {
             $this->importHotels($decompressedFile);
+            
+            // Sync: Delete hotels that were NOT touched by this import
+            if ($this->option('sync') && !$this->option('limit')) {
+                $this->info("Syncing: Deleting hotels that are no longer in the RateHawk dump...");
+                $deletedCount = Hotel::where('updated_at', '<', $syncStartTime)->delete();
+                $this->info("Cleanup complete: {$deletedCount} old hotels removed.");
+            }
         } else {
             $this->info("Run with --import flag to import the extracted JSON into the database.");
         }
@@ -97,6 +106,7 @@ class FetchRateHawkDump extends Command
         $count = 0;
         $batch = [];
         $batchSize = 1000;
+        $limit = $this->option('limit') ? (int) $this->option('limit') : null;
 
         while (($line = fgets($handle)) !== false) {
             $data = json_decode($line, true);
@@ -119,7 +129,13 @@ class FetchRateHawkDump extends Command
                 'updated_at' => now(),
             ];
 
-            if (count($batch) >= $batchSize) {
+            if (count($batch) >= $batchSize || ($limit && ($count + count($batch)) >= $limit)) {
+                // If we have a limit and the batch would exceed it, slice it
+                if ($limit && ($count + count($batch)) > $limit) {
+                    $needed = $limit - $count;
+                    $batch = array_slice($batch, 0, $needed);
+                }
+
                 Hotel::upsert($batch, ['id'], [
                     'name', 'description', 'address', 'phone', 'email', 
                     'star_rating', 'latitude', 'longitude', 'region_id', 'images', 'amenities', 'updated_at'
@@ -127,11 +143,15 @@ class FetchRateHawkDump extends Command
                 $count += count($batch);
                 $this->info("Imported {$count} hotels...");
                 $batch = [];
+
+                if ($limit && $count >= $limit) {
+                    break;
+                }
             }
         }
 
         // process remaining
-        if (count($batch) > 0) {
+        if (count($batch) > 0 && (!$limit || $count < $limit)) {
             Hotel::upsert($batch, ['id'], [
                 'name', 'description', 'address', 'phone', 'email', 
                 'star_rating', 'latitude', 'longitude', 'region_id', 'images', 'amenities', 'updated_at'

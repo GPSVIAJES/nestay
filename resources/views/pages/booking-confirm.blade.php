@@ -2,9 +2,14 @@
 
 @section('content')
   @php
+    \Carbon\Carbon::setLocale('es');
     $rate = is_string($booking->rooms_data) ? json_decode($booking->rooms_data, true) : ($booking->rooms_data ?? []);
-    $roomName = $rate['room_name'] ?? 'Habitación Estándar';
-    $meal = $rate['meal_label'] ?? ($rate['meal'] ?? 'Solo alojamiento');
+    
+    // RateHawk stores these in 'api_rate' inside 'rooms_data'
+    $apiRate = $rate['api_rate'] ?? [];
+    $roomName = $apiRate['room_name'] ?? 'Habitación Estándar';
+    $meal = $apiRate['meal_label'] ?? ($apiRate['meal'] ?? 'Solo alojamiento');
+    
     $nights = $booking->check_in && $booking->check_out
       ? $booking->check_in->diffInDays($booking->check_out)
       : 1;
@@ -335,54 +340,103 @@
       flex-shrink: 0;
     }
 
-    /* ── BOOKING DETAILS GRID ── */
+    /* ── DETAILS GRID (3 cols) ── */
     .details-grid {
       display: grid;
-      grid-template-columns: repeat(5, 1fr);
+      grid-template-columns: repeat(3, 1fr);
       gap: 1px;
       background: #f0ede8;
-      border-radius: 20px;
-      overflow: hidden;
-      margin-bottom: 28px;
+      border-top: 1px solid #f0ede8;
+      border-bottom: 1px solid #f0ede8;
+      margin: 32px -32px 0;
     }
 
     .detail-cell {
-      background: #faf9f7;
-      padding: 22px 20px;
-      text-align: center;
-      transition: background 0.2s;
+      background: #fff;
+      padding: 16px 24px;
+      text-align: left;
+      border-right: 1px solid #f0ede8;
     }
 
-    .detail-cell:hover {
-      background: #fff5f2;
+    .detail-cell:last-child {
+      border-right: none;
     }
 
     .dc-label {
-      font-size: 10px;
+      font-size: 11px;
       font-weight: 700;
       text-transform: uppercase;
-      letter-spacing: 1.2px;
+      letter-spacing: 1px;
       color: #aaa;
-      margin-bottom: 8px;
+      margin-bottom: 12px;
     }
 
     .dc-value {
-      font-size: 16px;
+      font-size: 20px;
       font-weight: 700;
       color: #1a1a1a;
-      line-height: 1.2;
+      margin-bottom: 2px;
+      line-height: 1;
+    }
+
+    .dc-meta {
+      font-size: 13px;
+      color: #999;
+      font-weight: 400;
     }
 
     .dc-value.accent {
       color: #EE6C4D;
     }
 
-    .dc-value.green {
-      color: #16a34a;
+    /* ── GUESTS SECTION ── */
+    .guests-section {
+      padding: 32px 0 0;
     }
 
-    .dc-value.small {
-      font-size: 13px;
+    .gs-label {
+      font-size: 11px;
+      font-weight: 700;
+      color: #aaa;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 16px;
+    }
+
+    .gs-summary {
+      font-size: 20px;
+      font-weight: 700;
+      color: #1a1a1a;
+      margin-bottom: 24px;
+    }
+
+    .dist-grid {
+      display: flex;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+
+    .dist-box {
+      flex: 1;
+      min-width: 180px;
+      background: #f6f6f6;
+      padding: 12px 20px;
+      border-radius: 12px;
+    }
+
+    .db-label {
+      font-size: 11px;
+      color: #999;
+      font-weight: 700;
+      text-transform: uppercase;
+      margin-bottom: 4px;
+      letter-spacing: 0.5px;
+    }
+
+    .db-val {
+      font-size: 15px;
+      font-weight: 700;
+      color: #1a1a1a;
     }
 
     /* ── ROOM & MEAL ── */
@@ -712,88 +766,78 @@
           </div>
         </div>
 
-        {{-- Dates / Guests / Nights / Price Grid --}}
+        {{-- Dates Grid (3 columns) --}}
         <div class="details-grid">
           <div class="detail-cell">
             <div class="dc-label">Check-in</div>
-            <div class="dc-value">{{ $booking->check_in->format('d M') }}</div>
-            <div class="dc-value small" style="color:#888; font-weight:500; font-size:12px;">
-              {{ $booking->check_in->format('Y') }}</div>
+            <div class="dc-value">{{ \Carbon\Carbon::parse($booking->check_in)->locale('es')->translatedFormat('d M') }}</div>
+            <div class="dc-meta">{{ \Carbon\Carbon::parse($booking->check_in)->format('Y') }} · {{ ucfirst(\Carbon\Carbon::parse($booking->check_in)->locale('es')->translatedFormat('l')) }}
+            </div>
           </div>
           <div class="detail-cell">
             <div class="dc-label">Check-out</div>
-            <div class="dc-value">{{ $booking->check_out->format('d M') }}</div>
-            <div class="dc-value small" style="color:#888; font-weight:500; font-size:12px;">
-              {{ $booking->check_out->format('Y') }}</div>
+            <div class="dc-value">{{ \Carbon\Carbon::parse($booking->check_out)->locale('es')->translatedFormat('d M') }}</div>
+            <div class="dc-meta">{{ \Carbon\Carbon::parse($booking->check_out)->format('Y') }} ·
+              {{ ucfirst(\Carbon\Carbon::parse($booking->check_out)->locale('es')->translatedFormat('l')) }}</div>
           </div>
           <div class="detail-cell">
             <div class="dc-label">Duración</div>
             <div class="dc-value accent">{{ $nights }}</div>
-            <div class="dc-value small" style="color:#EE6C4D; font-size:12px; font-weight:600;">
-              noche{{ $nights != 1 ? 's' : '' }}</div>
-          </div>
-          <div class="detail-cell">
-            <div class="dc-label">Huéspedes</div>
-            <div style="display:flex; flex-direction:column; align-items:flex-end; flex:1; margin-left:20px;">
-              <div style="font-weight:700; color:#1a1a1a;">
-                {{ $booking->guests }} adulto{{ $booking->guests != 1 ? 's' : '' }}
-                @if($booking->children > 0) · {{ $booking->children }} niño{{ $booking->children != 1 ? 's' : '' }} @endif
-                · {{ $booking->rooms }} hab.
-              </div>
-              @if(isset($booking->rooms_data['rooms_config']))
-                @php $rConf = json_decode(urldecode($booking->rooms_data['rooms_config']), true); @endphp
-                @if(is_array($rConf))
-                  <div style="margin-top:6px; width:100%;">
-                    @foreach($rConf as $i => $r)
-                      <div style="font-size:12px; color:#1a1a1a; margin-top:4px; display:flex; justify-content:flex-end; gap:8px;">
-                        <span style="color:#888;">Hab {{ $i+1 }}</span>
-                        <span style="font-weight:600;">{{ $r['adults'] }} adulto{{ $r['adults'] != 1 ? 's' : '' }} @if(count($r['children']) > 0) · {{ count($r['children']) }} niño{{ count($r['children']) != 1 ? 's' : '' }} @endif</span>
-                      </div>
-                    @endforeach
-                  </div>
-                @endif
-              @endif
-            </div>
-          </div>
-          <div class="detail-cell">
-            <div class="dc-label">Habitaciones</div>
-            <div class="dc-value">{{ $booking->rooms }}</div>
-            <div class="dc-value small" style="color:#888; font-weight:500; font-size:12px;">
-              habitación{{ $booking->rooms != 1 ? 'es' : '' }}</div>
+            <div class="dc-meta">noches</div>
           </div>
         </div>
 
-        {{-- Room & Meal --}}
-        <div class="rate-row">
-          <div class="rate-pill">
-            <div class="rate-pill-icon orange">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#EE6C4D" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 4v16"/><path d="M2 8h18a2 2 0 0 1 2 2v10"/><path d="M2 17h20"/><path d="M6 8v9"/></svg>
-            </div>
-            <div>
-              <div class="rate-pill-label">Habitación</div>
-              <div class="rate-pill-value">{{ $roomName }}</div>
+        {{-- Guests Section --}}
+        <div class="guests-section">
+          @php 
+              $rConf = $rate['rooms_config'] ?? null;
+              if (is_string($rConf)) {
+                  $rConf = json_decode(urldecode($rConf), true);
+              }
+              
+              // Use booking attributes as source of truth for the main summary
+              $totalAdults = $booking->guests;
+              $totalChildren = $booking->children;
+              $roomsCount = $booking->rooms;
+          @endphp
+          
+          <div class="summary-row" style="display:flex; justify-content:space-between; align-items:flex-start; padding: 16px 0; border-top: 1px solid #f0ede8;">
+            <span class="sr-label" style="font-size: 13px; font-weight: 700; color: #aaa; text-transform: uppercase; letter-spacing: 0.5px;">Huéspedes</span>
+            <div id="summary-guests" style="display:flex; flex-direction:column; align-items:flex-end; flex:1; margin-left:20px;">
+              <div style="font-weight:700; color:#1a1a1a; font-size: 16px;">
+                {{ $totalAdults }} adulto{{ $totalAdults > 1 ? 's' : '' }}
+                @if($totalChildren > 0) · {{ $totalChildren }} niño{{ $totalChildren > 1 ? 's' : '' }} @endif
+                · {{ $roomsCount }} hab.
+              </div>
+              @if(is_array($rConf) && count($rConf) > 0)
+                <div style="margin-top:6px; width:100%;">
+                  @foreach($rConf as $i => $r)
+                    <div style="font-size:12px; color:#1a1a1a; margin-top:4px; display:flex; justify-content:flex-end; gap:8px;">
+                      <span style="color:#888;">Hab {{ $i+1 }}</span>
+                      <span style="font-weight:600;">
+                        {{ $r['adults'] }} adulto{{ $r['adults'] > 1 ? 's' : '' }}
+                        @if(isset($r['children']) && count($r['children']) > 0)
+                          · {{ count($r['children']) }} niño{{ count($r['children']) > 1 ? 's' : '' }}
+                        @endif
+                      </span>
+                    </div>
+                  @endforeach
+                </div>
+              @endif
             </div>
           </div>
-          <div class="rate-pill">
-            <div class="rate-pill-icon green">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 2v7c0 2.2 1.8 4 4 4h0c2.2 0 4-1.8 4-4V2"/><path d="M7 2v20"/><path d="M21 15V2v0a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3Zm0 0v7"/></svg>
-            </div>
-            <div>
-              <div class="rate-pill-label">Régimen</div>
-              <div class="rate-pill-value">{{ $meal }}</div>
-            </div>
+
+          <div style="height: 1px; background: #f0ede8; margin: 4px 0;"></div>
+
+          <div class="summary-row" style="display:flex; justify-content:space-between; align-items:center; padding: 16px 0;">
+            <span class="sr-label" style="font-size: 13px; font-weight: 700; color: #e85d2f; text-transform: uppercase; letter-spacing: 0.5px;">Habitación</span>
+            <span class="sr-value" style="font-size: 16px; font-weight: 700; color: #1a1a1a; text-align: right;">{{ $roomName }}</span>
           </div>
-          @if($booking->cancellation_policy)
-            <div class="rate-pill">
-              <div class="rate-pill-icon green">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-              </div>
-              <div>
-                <div class="rate-pill-label">Cancelación</div>
-                <div class="rate-pill-value" style="font-size:13px;">{{ $booking->cancellation_policy }}</div>
-              </div>
-            </div>
-          @endif
+
+          <div class="summary-row" style="display:flex; justify-content:space-between; align-items:center; padding: 16px 0; border-top: 1px solid #f5f5f5;">
+            <span class="sr-label" style="font-size: 13px; font-weight: 700; color: #e85d2f; text-transform: uppercase; letter-spacing: 0.5px;">Régimen</span>
+            <span class="sr-value" id="summary-meal" style="font-size: 16px; font-weight: 700; color: #1a1a1a; text-align: right;">{{ $meal }}</span>
+          </div>
         </div>
 
         {{-- Price Summary --}}
@@ -835,7 +879,7 @@
       <div class="step-item">
         <div class="step-num">3</div>
         <div class="step-text">
-          <strong>Check-in el {{ $booking->check_in->translatedFormat('j \d\e F, Y') }}</strong> — El horario estándar de
+          <strong>Check-in el {{ \Carbon\Carbon::parse($booking->check_in)->locale('es')->translatedFormat('j \d\e F, Y') }}</strong> — El horario estándar de
           check-in es a las 14:00h. Contacta al hotel si necesitas una llegada anticipada.
         </div>
       </div>
