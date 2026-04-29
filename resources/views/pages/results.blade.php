@@ -620,6 +620,8 @@
     <div class="results-layout-grid">
         <!-- Sidebar Filters -->
         <aside class="results-sidebar">
+            <button class="results-sidebar-close" onclick="this.closest('.results-sidebar').classList.remove('mobile-open')" 
+                style="display:none; position:absolute; top:20px; right:20px; background:#f5f3f0; border:none; border-radius:50%; width:36px; height:36px; font-size:18px; cursor:pointer; color:#555;">✕</button>
             <h3>Precio máximo</h3>
             <div class="price-range-label" id="price-label-sidebar">Hasta $1000</div>
             <input type="range" min="20" max="1000" value="1000" id="price-slider-sidebar" oninput="resultsPage.updatePriceFilter(this.value)" class="filter-range">
@@ -646,6 +648,20 @@
 
         <!-- Main Content -->
         <main class="results-main-area">
+            <!-- Mobile Filter Toggle -->
+            <button onclick="document.querySelector('.results-sidebar').classList.toggle('mobile-open')" 
+                style="display:none; width:100%; background:#fff; border:1.5px solid #e0ddd8; border-radius:12px; padding:12px; font-size:14px; font-weight:600; color:#444; cursor:pointer; margin-bottom:16px; font-family:'DM Sans',sans-serif;" 
+                class="mobile-filter-btn">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="vertical-align:middle; margin-right:8px"><line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/></svg>
+                Filtros
+            </button>
+            <style>
+                @media(max-width:768px) { 
+                    .mobile-filter-btn { display:flex !important; align-items:center; justify-content:center; }
+                    .results-sidebar .btn-clear-filters::after { content: ''; display:block; }
+                    .results-sidebar-close { display:block !important; }
+                }
+            </style>
             <div class="results-top-actions">
                 <div class="results-count-text"><strong><span id="res-count-main">...</span> alojamientos</strong> encontrados</div>
                 <select class="sort-dropdown" onchange="resultsPage.sortResults(this.value)">

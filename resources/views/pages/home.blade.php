@@ -27,39 +27,66 @@
                         <div class="sfields-mix">
                             <div class="sf-box" style="position:relative;">
                                 <label class="sf-label">
-                                    <svg class="sf-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+                                    <svg class="sf-icon" width="14" height="14" viewBox="0 0 24 24" fill="none"
+                                        stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                        stroke-linejoin="round">
+                                        <circle cx="11" cy="11" r="8" />
+                                        <path d="M21 21l-4.35-4.35" />
+                                    </svg>
                                     Destino
                                 </label>
-                                <input type="text" name="destination" id="dest" class="sf-val"
-                                    placeholder="¿Dónde vas?" required autocomplete="off"
-                                    oninput="SearchMix.onDestInput(this.value)">
+                                <input type="text" name="destination" id="dest" class="sf-val" placeholder="¿Dónde vas?"
+                                    required autocomplete="off" oninput="SearchMix.onDestInput(this.value)">
                                 <input type="hidden" name="region_id" id="region-id-input" value="">
-                                <div id="dest-suggestions" style="display:none; position:absolute; top:100%; left:0; right:0; background:#fff; border-radius:14px; box-shadow:0 8px 32px rgba(0,0,0,0.12); z-index:9999; overflow:hidden; margin-top:6px; border:1px solid rgba(47,47,47,.08);"></div>
+                                <div id="dest-suggestions"
+                                    style="display:none; position:absolute; top:100%; left:0; right:0; background:#fff; border-radius:14px; box-shadow:0 8px 32px rgba(0,0,0,0.12); z-index:9999; overflow:hidden; margin-top:6px; border:1px solid rgba(47,47,47,.08);">
+                                </div>
                             </div>
                             <div class="sf-box">
                                 <label class="sf-label">
-                                    <svg class="sf-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                                    <svg class="sf-icon" width="14" height="14" viewBox="0 0 24 24" fill="none"
+                                        stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                        stroke-linejoin="round">
+                                        <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+                                        <line x1="16" y1="2" x2="16" y2="6" />
+                                        <line x1="8" y1="2" x2="8" y2="6" />
+                                        <line x1="3" y1="10" x2="21" y2="10" />
+                                    </svg>
                                     Fecha de Inicio
                                 </label>
-                                <input type="text" onfocus="(this.type='date')" onblur="(this.type=this.value?'date':'text')"
-                                    name="check_in" id="cin" class="sf-val" placeholder="Añade una fecha" required
-                                    min="{{ date('Y-m-d') }}"
+                                <input type="text" onfocus="(this.type='date')"
+                                    onblur="(this.type=this.value?'date':'text')" name="check_in" id="cin" class="sf-val"
+                                    placeholder="Añade una fecha" required min="{{ date('Y-m-d') }}"
                                     onchange="SearchMix.onCheckinChange(this.value)">
                             </div>
                             <div class="sf-box">
                                 <label class="sf-label">
-                                    <svg class="sf-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                                    <svg class="sf-icon" width="14" height="14" viewBox="0 0 24 24" fill="none"
+                                        stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                        stroke-linejoin="round">
+                                        <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+                                        <line x1="16" y1="2" x2="16" y2="6" />
+                                        <line x1="8" y1="2" x2="8" y2="6" />
+                                        <line x1="3" y1="10" x2="21" y2="10" />
+                                    </svg>
                                     Fecha Final
                                 </label>
-                                <input type="text" onfocus="(this.type='date')" onblur="(this.type=this.value?'date':'text')"
-                                    name="check_out" id="cout" class="sf-val" placeholder="Añade una fecha" required
-                                    min="{{ date('Y-m-d', strtotime('+1 day')) }}">
+                                <input type="text" onfocus="(this.type='date')"
+                                    onblur="(this.type=this.value?'date':'text')" name="check_out" id="cout" class="sf-val"
+                                    placeholder="Añade una fecha" required min="{{ date('Y-m-d', strtotime('+1 day')) }}">
                             </div>
                             <!-- Huéspedes Dropdown -->
                             <div class="sf-box sf-box-guest" style="position: relative;">
                                 <div style="cursor:pointer" onclick="SearchMix.toggleGuest()">
                                     <label class="sf-label">
-                                        <svg class="sf-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                                        <svg class="sf-icon" width="14" height="14" viewBox="0 0 24 24" fill="none"
+                                            stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                            stroke-linejoin="round">
+                                            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+                                            <circle cx="9" cy="7" r="4" />
+                                            <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+                                            <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+                                        </svg>
                                         Huéspedes
                                     </label>
                                     <div class="sf-val" id="guest-summary">2 adultos · 1 hab</div>
@@ -75,7 +102,11 @@
                                         <!-- Room 1 (default) -->
                                         <div class="room-block" data-room="1">
                                             <div class="room-header">
-                                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--t)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
+                                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+                                                    stroke="var(--t)" stroke-width="2" stroke-linecap="round"
+                                                    stroke-linejoin="round">
+                                                    <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+                                                </svg>
                                                 <span>Habitación 1</span>
                                             </div>
 
@@ -84,27 +115,38 @@
                                                     <h4>Adultos</h4>
                                                 </div>
                                                 <div class="hub-ctrl">
-                                                    <button type="button" class="hub-btn" onclick="SearchMix.adjustRoom(1,'adults',-1)">−</button>
+                                                    <button type="button" class="hub-btn"
+                                                        onclick="SearchMix.adjustRoom(1,'adults',-1)">−</button>
                                                     <span class="hub-num" id="room-1-adults">2</span>
-                                                    <button type="button" class="hub-btn" onclick="SearchMix.adjustRoom(1,'adults',1)">+</button>
+                                                    <button type="button" class="hub-btn"
+                                                        onclick="SearchMix.adjustRoom(1,'adults',1)">+</button>
                                                 </div>
                                             </div>
 
                                             <div class="hub-children-list" id="room-1-children"></div>
 
                                             <button type="button" class="add-child-btn" onclick="SearchMix.addChild(1)">
-                                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
+                                                    stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+                                                    <line x1="12" y1="5" x2="12" y2="19" />
+                                                    <line x1="5" y1="12" x2="19" y2="12" />
+                                                </svg>
                                                 Añadir un niño
                                             </button>
                                         </div>
                                     </div>
 
                                     <button type="button" class="add-room-btn" onclick="SearchMix.addRoom()">
-                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                            stroke-width="2.5" stroke-linecap="round">
+                                            <line x1="12" y1="5" x2="12" y2="19" />
+                                            <line x1="5" y1="12" x2="19" y2="12" />
+                                        </svg>
                                         Agregar habitación
                                     </button>
 
-                                    <button type="button" class="guest-done-btn" onclick="SearchMix.toggleGuest()">Listo</button>
+                                    <button type="button" class="guest-done-btn"
+                                        onclick="SearchMix.toggleGuest()">Listo</button>
                                 </div>
                             </div>
 
@@ -122,7 +164,7 @@
                 </div>
 
                 <!-- STATS (IMAGE 1) -->
-                <div class="mobile-carousel" style="display:flex; justify-content:center; gap:48px; margin-top:80px">
+                <div class="mobile-carousel" style="display:flex; justify-content:center; gap:48px; margin:40px">
                     <div style="text-align:center">
                         <div style="font-family:'DM Sans',serif; font-size:36px; font-weight:800; color:#fff">2.4M+</div>
                         <div style="font-size:13px; color:#fff; opacity:0.8">Alojamientos</div>
@@ -657,8 +699,7 @@
                 </div>
                 <!-- CARD 4 -->
                 <div class="pcard-mix">
-                    <div class="p-img-box"
-                        style="background-image: url('/images/mountain_cabin.jpg')">
+                    <div class="p-img-box" style="background-image: url('/images/mountain_cabin.jpg')">
                     </div>
                     <div class="p-body">
                         <div class="p-loc">📍 Sierra Nevada</div>
@@ -679,11 +720,11 @@
 
     <script>
         const SearchMix = {
-            rooms: (function() {
+            rooms: (function () {
                 const params = new URLSearchParams(window.location.search);
                 const config = params.get('rooms_config');
                 if (config) {
-                    try { return JSON.parse(decodeURIComponent(config)); } catch(e) { console.error('Rooms config error:', e); }
+                    try { return JSON.parse(decodeURIComponent(config)); } catch (e) { console.error('Rooms config error:', e); }
                 }
                 return [{ adults: parseInt(params.get('adults')) || 2, children: [] }];
             })(),
@@ -732,20 +773,20 @@
                 if (!container || !room) return;
 
                 container.innerHTML = room.children.map((age, i) => {
-                    const options = Array.from({length: 18}, (_, a) =>
+                    const options = Array.from({ length: 18 }, (_, a) =>
                         `<option value="${a}" ${a === age ? 'selected' : ''}>${a} años</option>`
                     ).join('');
                     return `
-                        <div class="child-row">
-                            <label>Niño ${i + 1}</label>
-                            <select class="child-age-select" onchange="SearchMix.setChildAge(${roomIdx},${i},this.value)">
-                                ${options}
-                            </select>
-                            <button type="button" class="child-remove" onclick="SearchMix.removeChild(${roomIdx},${i})">
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-                            </button>
-                        </div>
-                    `;
+                            <div class="child-row">
+                                <label>Niño ${i + 1}</label>
+                                <select class="child-age-select" onchange="SearchMix.setChildAge(${roomIdx},${i},this.value)">
+                                    ${options}
+                                </select>
+                                <button type="button" class="child-remove" onclick="SearchMix.removeChild(${roomIdx},${i})">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                                </button>
+                            </div>
+                        `;
                 }).join('');
             },
 
@@ -759,25 +800,25 @@
                 block.className = 'room-block';
                 block.dataset.room = idx;
                 block.innerHTML = `
-                    <div class="room-header">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--t)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
-                        <span>Habitación ${idx}</span>
-                        <button type="button" class="remove-room" onclick="SearchMix.removeRoom(${idx})">Eliminar</button>
-                    </div>
-                    <div class="hub-row">
-                        <div class="hub-info"><h4>Adultos</h4></div>
-                        <div class="hub-ctrl">
-                            <button type="button" class="hub-btn" onclick="SearchMix.adjustRoom(${idx},'adults',-1)">−</button>
-                            <span class="hub-num" id="room-${idx}-adults">2</span>
-                            <button type="button" class="hub-btn" onclick="SearchMix.adjustRoom(${idx},'adults',1)">+</button>
+                        <div class="room-header">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--t)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
+                            <span>Habitación ${idx}</span>
+                            <button type="button" class="remove-room" onclick="SearchMix.removeRoom(${idx})">Eliminar</button>
                         </div>
-                    </div>
-                    <div class="hub-children-list" id="room-${idx}-children"></div>
-                    <button type="button" class="add-child-btn" onclick="SearchMix.addChild(${idx})">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-                        Añadir un niño
-                    </button>
-                `;
+                        <div class="hub-row">
+                            <div class="hub-info"><h4>Adultos</h4></div>
+                            <div class="hub-ctrl">
+                                <button type="button" class="hub-btn" onclick="SearchMix.adjustRoom(${idx},'adults',-1)">−</button>
+                                <span class="hub-num" id="room-${idx}-adults">2</span>
+                                <button type="button" class="hub-btn" onclick="SearchMix.adjustRoom(${idx},'adults',1)">+</button>
+                            </div>
+                        </div>
+                        <div class="hub-children-list" id="room-${idx}-children"></div>
+                        <button type="button" class="add-child-btn" onclick="SearchMix.addChild(${idx})">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                            Añadir un niño
+                        </button>
+                    `;
                 container.appendChild(block);
                 this.syncInputs();
             },
@@ -801,25 +842,25 @@
                         ? `<button type="button" class="remove-room" onclick="SearchMix.removeRoom(${idx})">Eliminar</button>`
                         : '';
                     block.innerHTML = `
-                        <div class="room-header">
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--t)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
-                            <span>Habitación ${idx}</span>
-                            ${removeBtn}
-                        </div>
-                        <div class="hub-row">
-                            <div class="hub-info"><h4>Adultos</h4></div>
-                            <div class="hub-ctrl">
-                                <button type="button" class="hub-btn" onclick="SearchMix.adjustRoom(${idx},'adults',-1)">−</button>
-                                <span class="hub-num" id="room-${idx}-adults">${room.adults}</span>
-                                <button type="button" class="hub-btn" onclick="SearchMix.adjustRoom(${idx},'adults',1)">+</button>
+                            <div class="room-header">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--t)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
+                                <span>Habitación ${idx}</span>
+                                ${removeBtn}
                             </div>
-                        </div>
-                        <div class="hub-children-list" id="room-${idx}-children"></div>
-                        <button type="button" class="add-child-btn" onclick="SearchMix.addChild(${idx})">
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-                            Añadir un niño
-                        </button>
-                    `;
+                            <div class="hub-row">
+                                <div class="hub-info"><h4>Adultos</h4></div>
+                                <div class="hub-ctrl">
+                                    <button type="button" class="hub-btn" onclick="SearchMix.adjustRoom(${idx},'adults',-1)">−</button>
+                                    <span class="hub-num" id="room-${idx}-adults">${room.adults}</span>
+                                    <button type="button" class="hub-btn" onclick="SearchMix.adjustRoom(${idx},'adults',1)">+</button>
+                                </div>
+                            </div>
+                            <div class="hub-children-list" id="room-${idx}-children"></div>
+                            <button type="button" class="add-child-btn" onclick="SearchMix.addChild(${idx})">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                                Añadir un niño
+                            </button>
+                        `;
                     container.appendChild(block);
                     this.renderChildren(idx);
                 });
@@ -838,7 +879,7 @@
 
                 let label = totalChildren > 0 ? (totalGuests > 1 ? 'huéspedes' : 'huésped') : (totalAdults > 1 ? 'adultos' : 'adulto');
                 let summary = `${totalGuests} ${label} · ${totalRooms} hab`;
-                
+
                 const summaryEl = document.getElementById('guest-summary');
                 summaryEl.innerText = summary;
                 summaryEl.classList.remove('empty-styled');
@@ -867,18 +908,18 @@
                     const items = data?.data || [];
                     if (!items.length) { box.style.display = 'none'; return; }
                     box.innerHTML = items.slice(0, 7).map(item => `
-                        <div style="padding:12px 16px; cursor:pointer; display:flex; align-items:center; gap:10px; border-bottom:1px solid rgba(47,47,47,.05); transition:background .15s;"
-                             onmouseenter="this.style.background='#fdf3f0'" onmouseleave="this.style.background=''" 
-                             onclick="SearchMix.selectDestination(${item.id}, '${(item.name || item.full_name || '').replace(/'/g, '\\&apos;')}', '${(item.country_name || item.country || '').replace(/'/g, '\\&apos;')}')">
-                            <span style="font-size:18px;">${item.type === 'hotel' ? '🏨' : '📍'}</span>
-                            <div>
-                                <div style="font-size:13.5px; font-weight:600; color:#2f2f2f;">${item.name || item.full_name}</div>
-                                <div style="font-size:11px; color:#9a9a9a;">${item.country_name || item.country || ''} · ${item.type === 'region' ? (item.hotels_count || '') + ' hoteles' : 'Hotel'}</div>
+                            <div style="padding:12px 16px; cursor:pointer; display:flex; align-items:center; gap:10px; border-bottom:1px solid rgba(47,47,47,.05); transition:background .15s;"
+                                 onmouseenter="this.style.background='#fdf3f0'" onmouseleave="this.style.background=''" 
+                                 onclick="SearchMix.selectDestination(${item.id}, '${(item.name || item.full_name || '').replace(/'/g, '\\&apos;')}', '${(item.country_name || item.country || '').replace(/'/g, '\\&apos;')}')">
+                                <span style="font-size:18px;">${item.type === 'hotel' ? '🏨' : '📍'}</span>
+                                <div>
+                                    <div style="font-size:13.5px; font-weight:600; color:#2f2f2f;">${item.name || item.full_name}</div>
+                                    <div style="font-size:11px; color:#9a9a9a;">${item.country_name || item.country || ''} · ${item.type === 'region' ? (item.hotels_count || '') + ' hoteles' : 'Hotel'}</div>
+                                </div>
                             </div>
-                        </div>
-                    `).join('');
+                        `).join('');
                     box.style.display = 'block';
-                } catch(e) {
+                } catch (e) {
                     console.error('[Nestay] Autocomplete error:', e);
                 }
             },
