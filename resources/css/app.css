@@ -1739,6 +1739,12 @@ header.sticky .nav-right .btn-ghost {
   box-shadow: 0 -10px 40px rgba(0,0,0,0.04);
 }
 
+/* Base size for mobile nav icons — always constrained */
+.mn-icon {
+  width: 24px;
+  height: 24px;
+}
+
 @media (max-width: 640px) {
   .mobile-nav {
     display: flex;
@@ -1761,10 +1767,5 @@ header.sticky .nav-right .btn-ghost {
 
   .mn-item.active {
     color: var(--t);
-  }
-
-  .mn-icon {
-    width: 24px;
-    height: 24px;
   }
 }
