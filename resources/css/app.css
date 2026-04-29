@@ -1664,7 +1664,19 @@ header.sticky .nav-right .btn-ghost {
 
 @media (max-width: 640px) {
   .hero-h1 {
-    font-size: 42px;
+    font-size: 38px !important;
+    text-align: center;
+    margin-top: 20px;
+  }
+
+  .hero-quote {
+    text-align: center;
+    margin-bottom: 32px;
+  }
+
+  .sbox-mix {
+    margin: 0 !important;
+    border-radius: 24px !important;
   }
 
   .sfields-mix {
@@ -1675,7 +1687,110 @@ header.sticky .nav-right .btn-ghost {
     padding: 20px;
   }
 
-  .dgrid-mix {
-    grid-template-columns: 1fr;
+  /* CAROUSEL MODE FOR MOBILE */
+  .mobile-carousel {
+    display: flex !important;
+    overflow-x: auto !important;
+    scroll-snap-type: x mandatory;
+    gap: 16px;
+    padding: 20px 0;
+    margin: 0;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .mobile-carousel::-webkit-scrollbar { display: none; }
+
+  .mobile-carousel > * {
+    flex: 0 0 280px;
+    scroll-snap-align: center;
+  }
+
+  .dest-mix, section[style*="padding: 100px 64px"] {
+    padding: 40px 20px !important;
+  }
+
+  .prop-bar {
+    display: flex;
+    overflow-x: auto;
+    gap: 20px;
+    padding: 20px !important;
+    background: var(--cr);
+    border: none;
+  }
+  
+  .prop-item {
+      white-space: nowrap;
+  }
+}
+
+/* ── MOBILE EXCLUSIVE UI ── */
+.mobile-nav {
+  display: none;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 70px;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(20px);
+  border-top: 1px solid rgba(0,0,0,0.05);
+  z-index: 10000;
+  padding: 0 20px;
+  box-shadow: 0 -10px 40px rgba(0,0,0,0.04);
+}
+
+@media (max-width: 640px) {
+  .mobile-nav {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .mn-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    color: var(--gm);
+    text-decoration: none;
+    font-size: 10px;
+    font-weight: 700;
+    width: 25%;
+    transition: all .2s;
+  }
+
+  .mn-item.active {
+    color: var(--t);
+  }
+
+  .mn-icon {
+    width: 24px;
+    height: 24px;
+  }
+}
+between;
+    align-items: center;
+  }
+
+  .mn-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    color: var(--gm);
+    text-decoration: none;
+    font-size: 10px;
+    font-weight: 700;
+    width: 25%;
+    transition: all .2s;
+  }
+
+  .mn-item.active {
+    color: var(--t);
+  }
+
+  .mn-icon {
+    width: 24px;
+    height: 24px;
   }
 }

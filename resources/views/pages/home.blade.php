@@ -122,7 +122,7 @@
                 </div>
 
                 <!-- STATS (IMAGE 1) -->
-                <div style="display:flex; justify-content:center; gap:48px; margin-top:80px">
+                <div class="mobile-carousel" style="display:flex; justify-content:center; gap:48px; margin-top:80px">
                     <div style="text-align:center">
                         <div style="font-family:'DM Sans',serif; font-size:36px; font-weight:800; color:#fff">2.4M+</div>
                         <div style="font-size:13px; color:#fff; opacity:0.8">Alojamientos</div>
@@ -571,7 +571,7 @@
             <h2 class="dest-h2" style="margin-top:12px">Viaja a donde siempre<br><em
                     style="font-family:'Instrument Serif',serif; font-style:italic; color:var(--t)">has soñado ir.</em></h2>
 
-            <div class="dgrid-mix">
+            <div class="dgrid-mix mobile-carousel">
                 <div class="dcard-mix c1">
                     <div class="d-tag">Escapada</div>
                     <div class="d-name">Playa</div>
@@ -608,7 +608,7 @@
                 <a style="font-size:14px; font-weight:700; color:var(--gm); cursor:pointer">Ver todos →</a>
             </div>
 
-            <div style="display:grid; grid-template-columns: repeat(4, 1fr); gap:24px">
+            <div class="mobile-carousel" style="display:grid; grid-template-columns: repeat(4, 1fr); gap:24px">
                 <!-- CARD 1 -->
                 <div class="pcard-mix">
                     <div class="p-img-box"
