@@ -16,13 +16,6 @@
 
                 <!-- TABBED SEARCH BOX -->
                 <div class="sbox-mix">
-                    <div class="stabs-mix">
-                        <button class="stab-mix on">Hoteles</button>
-                        <button class="stab-mix">Apartamentos</button>
-                        <button class="stab-mix">Casas rurales</button>
-                        <button class="stab-mix">Villas</button>
-                    </div>
-
                     <form action="{{ route('search') }}" method="GET" onsubmit="return SearchMix.validateSearch(event)">
                         <div class="sfields-mix">
                             <div class="sf-box" style="position:relative;">
@@ -164,7 +157,7 @@
                 </div>
 
                 <!-- STATS (IMAGE 1) -->
-                <div class="mobile-carousel" style="display:flex; justify-content:center; gap:48px; margin:40px">
+                <div class="hero-stats-bar" style="display:flex; justify-content:center; gap:48px; margin:40px">
                     <div style="text-align:center">
                         <div style="font-family:'DM Sans',serif; font-size:36px; font-weight:800; color:#fff">2.4M+</div>
                         <div style="font-size:13px; color:#fff; opacity:0.8">Alojamientos</div>
