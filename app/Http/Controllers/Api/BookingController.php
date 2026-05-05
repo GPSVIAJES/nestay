@@ -200,6 +200,12 @@ class BookingController extends Controller
 
         // Still pending — poll ETG
         $apiResult = $this->bookingService->pollBookingStatus($partnerOrderId);
+        
+        Log::info("[RateHawk] Poll result for {$partnerOrderId}", [
+            'api_status' => $apiResult['data']['status'] ?? 'N/A',
+            'api_error'  => $apiResult['error'] ?? 'none'
+        ]);
+
         $apiStatus = $apiResult['data']['status'] ?? '';
         $apiError  = $apiResult['error']          ?? '';
 
