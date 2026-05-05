@@ -115,6 +115,8 @@ class FetchRateHawkDump extends Command
             $batch[] = [
                 'id' => $data['id'],
                 'name' => $data['name'] ?? null,
+                'city' => $data['region']['name'] ?? null,
+                'country' => $data['region']['country_code'] ?? null,
                 'description' => $data['description_struct'][0]['paragraphs'][0] ?? null,
                 'address' => $data['address'] ?? null,
                 'phone' => $data['phone'] ?? null,
@@ -122,7 +124,7 @@ class FetchRateHawkDump extends Command
                 'star_rating' => $data['star_rating'] ?? null,
                 'latitude' => $data['latitude'] ?? null,
                 'longitude' => $data['longitude'] ?? null,
-                'region_id' => $data['region_id'] ?? null,
+                'region_id' => $data['region']['id'] ?? null,
                 'images' => isset($data['images']) ? json_encode(array_slice($data['images'], 0, 5)) : null,
                 'amenities' => isset($data['amenities']) ? json_encode(array_slice($data['amenities'], 0, 10)) : null,
                 'created_at' => now(),
@@ -137,7 +139,7 @@ class FetchRateHawkDump extends Command
                 }
 
                 Hotel::upsert($batch, ['id'], [
-                    'name', 'description', 'address', 'phone', 'email', 
+                    'name', 'city', 'country', 'description', 'address', 'phone', 'email', 
                     'star_rating', 'latitude', 'longitude', 'region_id', 'images', 'amenities', 'updated_at'
                 ]);
                 $count += count($batch);
@@ -153,7 +155,7 @@ class FetchRateHawkDump extends Command
         // process remaining
         if (count($batch) > 0 && (!$limit || $count < $limit)) {
             Hotel::upsert($batch, ['id'], [
-                'name', 'description', 'address', 'phone', 'email', 
+                'name', 'city', 'country', 'description', 'address', 'phone', 'email', 
                 'star_rating', 'latitude', 'longitude', 'region_id', 'images', 'amenities', 'updated_at'
             ]);
             $count += count($batch);

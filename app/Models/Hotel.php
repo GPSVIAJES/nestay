@@ -14,7 +14,7 @@ class Hotel extends Model
     protected $keyType = 'string';
 
     protected $fillable = [
-        'id', 'name', 'description', 'address', 'phone', 'email',
+        'id', 'name', 'city', 'country', 'description', 'address', 'phone', 'email',
         'star_rating', 'latitude', 'longitude', 'region_id',
         'images', 'amenities'
     ];

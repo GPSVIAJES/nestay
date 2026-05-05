@@ -156,40 +156,84 @@ class HotelSearchService
      */
     public function suggest(string $query, string $language = 'es'): array
     {
-        if (config('ratehawk.use_mock')) {
-            Log::info('[RateHawk:MOCK] suggest', ['query' => $query]);
-            return $this->getMockSuggestions($query);
+        $q = mb_strtolower($query);
+
+        // 1. Search in local database (hotels and cities)
+        $localHotels = \App\Models\Hotel::where('name', 'like', "%{$query}%")
+            ->orWhere('city', 'like', "%{$query}%")
+            ->limit(20)
+            ->get();
+
+        $regions = [];
+        $hotels = [];
+        
+        // Extract cities
+        $cities = $localHotels->pluck('city')->unique();
+        foreach ($cities as $city) {
+            if (str_contains(mb_strtolower($city), $q)) {
+                $sampleHotel = $localHotels->where('city', $city)->first();
+                $regions[] = [
+                    'id' => $sampleHotel->region_id,
+                    'name' => $city,
+                    'type' => 'region',
+                    'country' => $sampleHotel->country,
+                    'hotels_count' => \App\Models\Hotel::where('city', $city)->count(),
+                ];
+            }
         }
 
-        $cacheKey = 'rh_suggest_' . md5($query . $language);
-        $ttl = config('ratehawk.cache.suggestions', 3600);
+        // Extract individual hotels
+        foreach ($localHotels as $hotel) {
+            if (str_contains(mb_strtolower($hotel->name), $q)) {
+                $hotels[] = [
+                    'id' => $hotel->region_id,
+                    'name' => $hotel->name,
+                    'type' => 'hotel',
+                    'country' => $hotel->country,
+                    'hotel_id' => $hotel->id,
+                ];
+            }
+        }
 
-        $raw = Cache::remember($cacheKey, $ttl, function () use ($query, $language) {
-            return $this->client->post('api/b2b/v3/search/multicomplete/', [
-                'query' => $query,
-                'language' => $language,
-            ]);
+        // Sort regions: Exact matches first
+        usort($regions, function($a, $b) use ($q) {
+            if (mb_strtolower($a['name']) === $q) return -1;
+            if (mb_strtolower($b['name']) === $q) return 1;
+            return 0;
         });
 
-        // Normalize real RateHawk response: {data: {regions:[...], hotels:[...]}}
-        // into our unified format:          {status: 'ok', data: [...flat list...]}
-        $regions = $raw['data']['regions'] ?? [];
-        $hotels = $raw['data']['hotels'] ?? [];
+        // Combine: Regions first, then hotels
+        $items = array_merge($regions, $hotels);
 
-        $items = array_merge(
-            array_map(fn($r) => array_merge($r, ['type' => 'region']), $regions),
-            array_map(fn($h) => array_merge($h, ['type' => 'hotel']), $hotels)
-        );
+        // 2. If nothing found locally AND not using mock, try the real API
+        if (empty($items) && !config('ratehawk.use_mock')) {
+            $cacheKey = 'rh_suggest_' . md5($query . $language);
+            $ttl = config('ratehawk.cache.suggestions', 3600);
 
-        // If the real API returned nothing (sandbox limitation), fallback to mock
+            $raw = Cache::remember($cacheKey, $ttl, function () use ($query, $language) {
+                return $this->client->post('api/b2b/v3/search/multicomplete/', [
+                    'query' => $query,
+                    'language' => $language,
+                ]);
+            });
+
+            $apiRegions = $raw['data']['regions'] ?? [];
+            $apiHotels = $raw['data']['hotels'] ?? [];
+
+            $items = array_merge(
+                array_map(fn($r) => array_merge($r, ['type' => 'region']), $apiRegions),
+                array_map(fn($h) => array_merge($h, ['type' => 'hotel']), $apiHotels)
+            );
+        }
+
+        // 3. Last fallback: Hardcoded mocks if still empty
         if (empty($items)) {
-            Log::info('[RateHawk] suggest returned empty, using mock fallback', ['query' => $query]);
             return $this->getMockSuggestions($query);
         }
 
         return [
-            'status' => $raw['status'] ?? 'ok',
-            'data' => $items,
+            'status' => 'ok',
+            'data' => array_slice($items, 0, 10), // Limit to top 10 results total
         ];
     }
 
