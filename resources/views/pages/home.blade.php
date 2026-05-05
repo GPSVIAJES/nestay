@@ -31,6 +31,7 @@
                                 <input type="text" name="destination" id="dest" class="sf-val" placeholder="¿Dónde vas?"
                                     required autocomplete="off" oninput="SearchMix.onDestInput(this.value)">
                                 <input type="hidden" name="region_id" id="region-id-input" value="">
+                                <input type="hidden" name="hotel_id" id="hotel-id-input" value="">
                                 <div id="dest-suggestions"
                                     style="display:none; position:absolute; top:100%; left:0; right:0; background:#fff; border-radius:14px; box-shadow:0 8px 32px rgba(0,0,0,0.12); z-index:9999; overflow:hidden; margin-top:6px; border:1px solid rgba(47,47,47,.08);">
                                 </div>
@@ -903,7 +904,7 @@
                     box.innerHTML = items.slice(0, 7).map(item => `
                             <div style="padding:12px 16px; cursor:pointer; display:flex; align-items:center; gap:10px; border-bottom:1px solid rgba(47,47,47,.05); transition:background .15s;"
                                  onmouseenter="this.style.background='#fdf3f0'" onmouseleave="this.style.background=''" 
-                                 onclick="SearchMix.selectDestination(${item.id}, '${(item.name || item.full_name || '').replace(/'/g, '\\&apos;')}', '${(item.country_name || item.country || '').replace(/'/g, '\\&apos;')}')">
+                                 onclick="SearchMix.selectDestination(${item.id}, '${(item.name || item.full_name || '').replace(/'/g, '\\&apos;')}', '${(item.country_name || item.country || '').replace(/'/g, '\\&apos;')}', '${item.hotel_id || ''}')">
                                 <span style="font-size:18px;">${item.type === 'hotel' ? '🏨' : '📍'}</span>
                                 <div>
                                     <div style="font-size:13.5px; font-weight:600; color:#2f2f2f;">${item.name || item.full_name}</div>
@@ -917,9 +918,10 @@
                 }
             },
 
-            selectDestination(id, name, country) {
+            selectDestination(id, name, country, hotel_id) {
                 document.getElementById('dest').value = name + (country ? ', ' + country : '');
                 document.getElementById('region-id-input').value = id;
+                document.getElementById('hotel-id-input').value = hotel_id || '';
                 document.getElementById('dest-suggestions').style.display = 'none';
             },
 

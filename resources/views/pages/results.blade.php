@@ -562,6 +562,7 @@
                 oninput="SearchMix.onDestInput(this.value)"
                 style="width:100%; background:transparent; border:none; outline:none; color:#fff; font-size:13px; font-weight:500; placeholder-color:#666;">
             <input type="hidden" name="region_id" id="region-id-input" value="{{ request('region_id') }}">
+            <input type="hidden" name="hotel_id" id="hotel-id-input" value="{{ request('hotel_id') }}">
             <div id="dest-suggestions" style="display:none; position:absolute; top:110%; left:-20px; right:0; background:#fff; border-radius:14px; box-shadow:0 12px 40px rgba(0,0,0,0.2); z-index:9999; overflow:hidden; border:1px solid #eee; color: #1a1a1a;"></div>
         </div>
 
@@ -858,7 +859,7 @@
                 if (!items.length) { box.style.display = 'none'; return; }
                 box.innerHTML = items.slice(0, 5).map(item => `
                     <div style="padding:10px 14px; cursor:pointer; font-size:13px; border-bottom:1px solid #f0ede8;" 
-                         onclick="SearchMix.selectDest(${item.id}, '${item.name.replace(/'/g, "\\'")}')">
+                         onclick="SearchMix.selectDest(${item.id}, '${item.name.replace(/'/g, "\\'")}', '${item.hotel_id || ''}')">
                         ${item.type==='hotel'?'🏨':'📍'} <strong>${item.name}</strong> <small style="color:#999">${item.country_name || ''}</small>
                     </div>
                 `).join('');
@@ -866,9 +867,10 @@
             } catch(e) { console.error(e); }
         },
 
-        selectDest(id, name) {
+        selectDest(id, name, hotel_id) {
             document.getElementById('dest').value = name;
             document.getElementById('region-id-input').value = id;
+            document.getElementById('hotel-id-input').value = hotel_id || '';
             document.getElementById('dest-suggestions').style.display = 'none';
         },
 
@@ -913,8 +915,11 @@
 
         async init() {
             const params = new URLSearchParams(window.location.search);
+            this.searchedHotelId = params.get('hotel_id');
+
             const payload = {
                 region_id: parseInt(params.get('region_id')) || 0,
+                hotel_id:  this.searchedHotelId,
                 checkin:   params.get('check_in'),
                 checkout:  params.get('check_out'),
                 adults:    parseInt(params.get('adults')) || 2,
@@ -950,7 +955,7 @@
                 this.allHotels = this._fallbackHotels;
             } finally {
                 this.filteredHotels = [...this.allHotels];
-                this.render();
+                this.sortResults('recommended');
                 document.getElementById('initial-results-loader').style.display = 'none';
             }
         },
@@ -998,7 +1003,6 @@
             <div class="hotel-result-card ${isComparing ? 'selected-for-compare' : ''}" onclick="window.location.href='${detailUrl}'">
                 <div class="hotel-card-image">
                     <img src="${img}" alt="${h.name}">
-                    <div class="hotel-type-badge">${h.stars} estrellas</div>
                 </div>
                 <div class="hotel-content-body">
                     <div class="hotel-address-link">
@@ -1145,9 +1149,32 @@
         },
 
         sortResults(val) {
-            if (val === 'price_asc') this.filteredHotels.sort((a,b) => (a.rates?.[0]?.daily_price || 0) - (b.rates?.[0]?.daily_price || 0));
+            if (val === 'recommended') {
+                this.filteredHotels.sort((a, b) => {
+                    // 1. Prioritize searched hotel
+                    if (this.searchedHotelId) {
+                        if (a.id == this.searchedHotelId) return -1;
+                        if (b.id == this.searchedHotelId) return 1;
+                    }
+
+                    // 2. Sort by Price/Rating ratio (Best Value)
+                    const priceA = a.rates?.[0]?.daily_price || 999999;
+                    const priceB = b.rates?.[0]?.daily_price || 999999;
+                    const ratingA = a.rating || 1;
+                    const ratingB = b.rating || 1;
+
+                    // We want high rating and low price. 
+                    // Ratio: Rating / Price (higher is better)
+                    const ratioA = ratingA / priceA;
+                    const ratioB = ratingB / priceB;
+
+                    return ratioB - ratioA; // Descending
+                });
+            }
+            else if (val === 'price_asc') this.filteredHotels.sort((a,b) => (a.rates?.[0]?.daily_price || 0) - (b.rates?.[0]?.daily_price || 0));
             else if (val === 'price_desc') this.filteredHotels.sort((a,b) => (b.rates?.[0]?.daily_price || 0) - (a.rates?.[0]?.daily_price || 0));
             else if (val === 'rating') this.filteredHotels.sort((a,b) => (b.rating || 0) - (a.rating || 0));
+            
             this.render();
         },
 

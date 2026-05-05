@@ -89,7 +89,9 @@ class BookingService
             try {
                 $result = $this->client->post('api/b2b/v3/hotel/order/booking/form/', [
                     'book_hash'        => $bookHash,
-                    'partner_order_id' => $partnerOrderId,
+                    'partner'          => [
+                        'partner_order_id' => $partnerOrderId,
+                    ],
                     'user_ip'          => request()->ip() === '127.0.0.1' || request()->ip() === '::1' ? '181.50.236.13' : request()->ip(),
                     'language'         => config('ratehawk.language', 'en'),
                 ]);
@@ -197,7 +199,9 @@ class BookingService
         }
 
         $payload = [
-            'partner_order_id' => $data['partner_order_id'],
+            'partner'          => [
+                'partner_order_id' => $data['partner_order_id'],
+            ],
             'user'             => [
                 // B2B: always use a fixed corporate email for confirmation emails
                 'email' => config('ratehawk.corporate_email', $data['guest']['email']),
@@ -242,7 +246,9 @@ class BookingService
         }
 
         return $this->client->post('api/b2b/v3/hotel/order/booking/finish/status/', [
-            'partner_order_id' => $partnerOrderId,
+            'partner' => [
+                'partner_order_id' => $partnerOrderId,
+            ],
         ]);
     }
 
@@ -261,7 +267,9 @@ class BookingService
         }
 
         return $this->client->post('api/b2b/v3/hotel/order/info/', [
-            'partner_order_id' => $partnerOrderId,
+            'partner' => [
+                'partner_order_id' => $partnerOrderId,
+            ],
         ]);
     }
 
@@ -287,14 +295,18 @@ class BookingService
         }
 
         $result = $this->client->post('api/b2b/v3/hotel/order/cancel/', [
-            'partner_order_id' => $booking->partner_order_id,
+            'partner' => [
+                'partner_order_id' => $booking->partner_order_id,
+            ],
         ]);
 
         // ETG recommends retrying once on timeout
         if (($result['error'] ?? '') === 'timeout') {
             Log::warning('[RateHawk] cancel timeout — retrying once');
             $result = $this->client->post('api/b2b/v3/hotel/order/cancel/', [
-                'partner_order_id' => $booking->partner_order_id,
+                'partner' => [
+                    'partner_order_id' => $booking->partner_order_id,
+                ],
             ]);
         }
 

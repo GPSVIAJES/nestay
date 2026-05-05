@@ -104,8 +104,22 @@ class HotelSearchService
             // We need to transform it to our standard structure and inject fallback static data so the UI doesn't break.
             $hpData = $raw['data']['hotels'][0];
 
-            // Generate some mock static data to fill the gaps for the real sandbox hotel
+            $local = \App\Models\Hotel::find($hotelId);
             $mockStatic = HotelDetail::get($hotelId, $params)['data']['hotel'];
+
+            $images = is_array($local?->images) ? $local->images : (is_string($local?->images) ? json_decode($local->images, true) : $mockStatic['images']);
+            $amenities = is_array($local?->amenities) ? $local->amenities : (is_string($local?->amenities) ? json_decode($local->amenities, true) : $mockStatic['amenities']);
+
+            if (empty($amenities)) {
+                $amenities = ['WiFi gratuito', 'Aire acondicionado', 'Servicio diario de limpieza'];
+            }
+            $description = $local ? $local->description : $mockStatic['description'];
+
+            if (is_array($images)) {
+                $images = array_map(fn($url) => str_replace('{size}', 'x500', $url), $images);
+            }
+
+            $rating = $hotelId ? round((crc32($hotelId) % 30 + 70) / 10, 1) : 8.5;
 
             $normalizedRates = array_map(function ($r) {
                 return [
@@ -125,15 +139,15 @@ class HotelSearchService
                 'data' => [
                     'hotel' => [
                         'id' => $hpData['id'] ?? $hotelId,
-                        'name' => $hpData['name'] ?? $params['hotel_name'] ?? 'Hotel ' . ($hpData['id'] ?? $hotelId),
-                        'stars' => $hpData['star_rating'] ?? $params['hotel_stars'] ?? 4,
-                        'rating' => 8.8,
+                        'name' => $local ? $local->name : ($hpData['name'] ?? $params['hotel_name'] ?? 'Hotel ' . ($hpData['id'] ?? $hotelId)),
+                        'stars' => $local ? $local->star_rating : ($hpData['star_rating'] ?? $params['hotel_stars'] ?? 4),
+                        'rating' => $rating,
                         'reviews' => rand(100, 500),
-                        'address' => $hpData['address'] ?? $params['hotel_address'] ?? 'Dirección del hotel',
-                        'city' => $hpData['region']['name'] ?? 'Ciudad',
-                        'images' => $mockStatic['images'],
-                        'amenities' => $mockStatic['amenities'],
-                        'description' => 'Un espectacular alojamiento seleccionado especialmente por Nestay para tu confort. Este hotel cuenta con todas las comodidades modernas para garantizar una estancia inolvidable.',
+                        'address' => $local ? $local->address : ($hpData['address'] ?? $params['hotel_address'] ?? 'Dirección del hotel'),
+                        'city' => $local ? $local->city : ($hpData['region']['name'] ?? 'Ciudad'),
+                        'images' => $images,
+                        'amenities' => $amenities,
+                        'description' => $description,
                     ],
                     'rates' => $normalizedRates,
                 ]
@@ -290,16 +304,36 @@ class HotelSearchService
     {
         $hotels = $raw['data']['hotels'] ?? [];
 
-        $normalized = array_map(function ($h) {
+        $hotelIds = array_column($hotels, 'id');
+        $localData = \App\Models\Hotel::whereIn('id', $hotelIds)->get()->keyBy('id');
+
+        $normalized = array_map(function ($h) use ($localData) {
+            $local = $localData->get($h['id'] ?? '');
+
+            $images = is_array($local?->images) ? $local->images : (is_string($local?->images) ? json_decode($local->images, true) : array_column(is_array($h['images'] ?? null) ? $h['images'] : [], 'src'));
+            $amenities = is_array($local?->amenities) ? $local->amenities : (is_string($local?->amenities) ? json_decode($local->amenities, true) : array_column(is_array($h['amenities'] ?? null) ? $h['amenities'] : [], 'name'));
+
+            if (empty($amenities)) {
+                $amenities = ['WiFi gratuito', 'Aire acondicionado', 'Servicio diario de limpieza'];
+            }
+
+            if (is_array($images)) {
+                $images = array_map(fn($url) => str_replace('{size}', 'x500', $url), $images);
+            }
+
+            // Generate a consistent mock rating since RateHawk dump doesn't provide it
+            $ratingId = $h['id'] ?? '';
+            $rating = $ratingId ? round((crc32($ratingId) % 30 + 70) / 10, 1) : 8.5;
+
             return [
                 'id' => $h['id'] ?? '',
-                'name' => $h['name'] ?? '',
-                'stars' => $h['star_rating'] ?? $h['stars'] ?? 0,
-                'rating' => $h['rating'] ?? null,
-                'address' => $h['address'] ?? '',
-                'city' => $h['region']['name'] ?? '',
-                'images' => array_column($h['images'] ?? [], 'src'),
-                'amenities' => array_column($h['amenities'] ?? [], 'name'),
+                'name' => $local ? $local->name : ($h['name'] ?? ''),
+                'stars' => $local ? $local->star_rating : ($h['star_rating'] ?? $h['stars'] ?? 0),
+                'rating' => $rating,
+                'address' => $local ? $local->address : ($h['address'] ?? ''),
+                'city' => $local ? $local->city : ($h['region']['name'] ?? ''),
+                'images' => $images,
+                'amenities' => $amenities,
                 'rates' => array_map(fn($r) => [
                     'book_hash' => $r['book_hash'] ?? '',
                     'room_name' => $r['room_name'] ?? '',
