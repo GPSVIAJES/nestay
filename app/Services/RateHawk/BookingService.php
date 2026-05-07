@@ -180,10 +180,14 @@ class BookingService
         foreach (($data['rooms'] ?? []) as $room) {
             $roomGuests = [];
             foreach (($room['guests'] ?? []) as $guest) {
-                $roomGuests[] = [
+                $guestData = [
                     'first_name' => $guest['first_name'],
                     'last_name'  => $guest['last_name'],
                 ];
+                if (!empty($guest['is_child']) && isset($guest['age'])) {
+                    $guestData['age'] = (int) $guest['age'];
+                }
+                $roomGuests[] = $guestData;
             }
             $rooms[] = ['guests' => $roomGuests];
         }

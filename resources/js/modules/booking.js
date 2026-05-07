@@ -137,11 +137,15 @@ export const BookingModule = {
      * Keep polling:      pending (processing/timeout/unknown)
      */
     async pollUntilConfirmed(partnerOrderId, maxAttempts = 20, intervalMs = 3000) {
+        let networkErrors = 0;
+        const MAX_NETWORK_ERRORS = 3;
+
         for (let attempt = 1; attempt <= maxAttempts; attempt++) {
             await new Promise(resolve => setTimeout(resolve, intervalMs));
 
             try {
                 const result = await NestayAPI.getBookingStatus(partnerOrderId);
+                networkErrors = 0; // reset on success
 
                 if (result.booking_status === 'confirmed') {
                     // Redirect to confirmation page using partner_order_id
@@ -160,14 +164,21 @@ export const BookingModule = {
                 // Still 'pending' — continue polling
 
             } catch (err) {
-                // Re-throw final errors
+                // Re-throw final business errors immediately
                 if (err.message && (
                     err.message.includes('no pudo ser confirmada') ||
                     err.message.includes('cancelada')
                 )) {
                     throw err;
                 }
-                console.warn(`[Booking] Poll attempt ${attempt} failed:`, err.message);
+
+                // Count network/connection errors
+                networkErrors++;
+                console.warn(`[Booking] Poll attempt ${attempt} failed (${networkErrors} network errors):`, err.message);
+
+                if (networkErrors >= MAX_NETWORK_ERRORS) {
+                    throw new Error('No se puede conectar con el servidor para verificar tu reserva. Revisa tu conexión e intenta de nuevo.');
+                }
             }
         }
 

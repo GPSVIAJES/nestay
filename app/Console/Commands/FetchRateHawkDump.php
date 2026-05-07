@@ -127,6 +127,8 @@ class FetchRateHawkDump extends Command
                 'region_id' => $data['region']['id'] ?? null,
                 'images' => isset($data['images']) ? json_encode(array_slice($data['images'], 0, 5)) : null,
                 'amenities' => isset($data['amenities']) ? json_encode(array_slice($data['amenities'], 0, 10)) : null,
+                'metapolicy_struct' => isset($data['metapolicy_struct']) ? json_encode($data['metapolicy_struct']) : null,
+                'metapolicy_extra_info' => $data['metapolicy_extra_info'] ?? null,
                 'created_at' => now(),
                 'updated_at' => now(),
             ];
@@ -140,7 +142,8 @@ class FetchRateHawkDump extends Command
 
                 Hotel::upsert($batch, ['id'], [
                     'name', 'city', 'country', 'description', 'address', 'phone', 'email', 
-                    'star_rating', 'latitude', 'longitude', 'region_id', 'images', 'amenities', 'updated_at'
+                    'star_rating', 'latitude', 'longitude', 'region_id', 'images', 'amenities', 
+                    'metapolicy_struct', 'metapolicy_extra_info', 'updated_at'
                 ]);
                 $count += count($batch);
                 $this->info("Imported {$count} hotels...");
@@ -156,7 +159,8 @@ class FetchRateHawkDump extends Command
         if (count($batch) > 0 && (!$limit || $count < $limit)) {
             Hotel::upsert($batch, ['id'], [
                 'name', 'city', 'country', 'description', 'address', 'phone', 'email', 
-                'star_rating', 'latitude', 'longitude', 'region_id', 'images', 'amenities', 'updated_at'
+                'star_rating', 'latitude', 'longitude', 'region_id', 'images', 'amenities', 
+                'metapolicy_struct', 'metapolicy_extra_info', 'updated_at'
             ]);
             $count += count($batch);
         }

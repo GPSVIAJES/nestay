@@ -43,6 +43,8 @@ class SearchController extends Controller
             'checkout'  => 'required|date|after:checkin',
             'adults'    => 'required|integer|min:1|max:8',
             'children'  => 'nullable|integer|min:0|max:6',
+            'children_ages' => 'nullable|array',
+            'children_ages.*' => 'integer|min:0|max:17',
             'rooms'     => 'nullable|integer|min:1|max:5',
             'currency'  => 'nullable|string|size:3',
         ]);
@@ -64,6 +66,8 @@ class SearchController extends Controller
             'checkout'      => 'required|date|after:checkin',
             'adults'        => 'required|integer|min:1|max:8',
             'children'      => 'nullable|integer|min:0|max:6',
+            'children_ages' => 'nullable|array',
+            'children_ages.*' => 'integer|min:0|max:17',
             'hotel_name'    => 'nullable|string',
             'hotel_address' => 'nullable|string',
             'hotel_stars'   => 'nullable|integer',

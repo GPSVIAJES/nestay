@@ -33,7 +33,10 @@ class HotelSearchService
                     'region_id' => $params['region_id'],
                     'checkin' => $params['checkin'],
                     'checkout' => $params['checkout'],
-                    'guests' => [['adults' => $params['adults'] ?? 2]],
+                    'guests' => [[
+                        'adults' => (int)($params['adults'] ?? 2),
+                        'children' => $params['children_ages'] ?? []
+                    ]],
                     'language' => config('ratehawk.language', 'en'),
                     'currency' => 'USD',
                     'residency' => config('ratehawk.residency', 'US'),
@@ -80,7 +83,10 @@ class HotelSearchService
                     'id' => $hotelId,
                     'checkin' => $params['checkin'],
                     'checkout' => $params['checkout'],
-                    'guests' => [['adults' => $params['adults'] ?? 2]],
+                    'guests' => [[
+                        'adults' => (int)($params['adults'] ?? 2),
+                        'children' => $params['children_ages'] ?? []
+                    ]],
                     'language' => config('ratehawk.language', 'en'),
                     'currency' => 'USD',
                     'residency' => config('ratehawk.residency', 'US'),
@@ -129,6 +135,7 @@ class HotelSearchService
                     'daily_price' => $r['payment_options']['payment_types'][0]['show_amount'] ?? 0,
                     'total_price' => $r['payment_options']['payment_types'][0]['show_amount'] ?? 0,
                     'refundable' => !empty($r['cancellation_info']['free_cancellation_before']),
+                    'cancellation_info' => $r['cancellation_info'] ?? null,
                     'currency' => $r['payment_options']['payment_types'][0]['show_currency_code'] ?? 'USD',
                     'amenities' => ['wifi', 'ac', 'tv']
                 ];
@@ -341,6 +348,7 @@ class HotelSearchService
                     'daily_price' => $r['payment_options']['payment_types'][0]['show_amount'] ?? 0,
                     'total_price' => $r['payment_options']['payment_types'][0]['show_amount'] ?? 0,
                     'refundable' => !empty($r['cancellation_info']['free_cancellation_before']),
+                    'cancellation_info' => $r['cancellation_info'] ?? null,
                     'currency' => $r['payment_options']['payment_types'][0]['show_currency_code'] ?? 'USD',
                 ], $h['rates'] ?? []),
             ];
@@ -388,7 +396,10 @@ class HotelSearchService
             'ids' => $hotelIds,
             'checkin' => $params['checkin'],
             'checkout' => $params['checkout'],
-            'guests' => [['adults' => $params['adults'] ?? 2]],
+            'guests' => [[
+                'adults' => (int)($params['adults'] ?? 2),
+                'children' => $params['children_ages'] ?? []
+            ]],
             'language' => config('ratehawk.language', 'en'),
             'currency' => 'USD',
             'residency' => config('ratehawk.residency', 'US'),
@@ -414,7 +425,10 @@ class HotelSearchService
             'radius' => $radius,
             'checkin' => $params['checkin'],
             'checkout' => $params['checkout'],
-            'guests' => [['adults' => $params['adults'] ?? 2]],
+            'guests' => [[
+                'adults' => (int)($params['adults'] ?? 2),
+                'children' => $params['children_ages'] ?? []
+            ]],
             'language' => config('ratehawk.language', 'en'),
             'currency' => 'USD',
             'residency' => config('ratehawk.residency', 'US'),

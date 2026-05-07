@@ -129,6 +129,8 @@ class BookingController extends Controller
             'rooms.*.guests'      => 'nullable|array',
             'rooms.*.guests.*.first_name' => 'required_with:rooms|string',
             'rooms.*.guests.*.last_name'  => 'required_with:rooms|string',
+            'rooms.*.guests.*.is_child'   => 'nullable|boolean',
+            'rooms.*.guests.*.age'        => 'nullable|integer|min:0|max:17',
         ]);
 
         $result = $this->bookingService->startBooking($validated, Auth::id());

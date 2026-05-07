@@ -16,11 +16,12 @@ class Hotel extends Model
     protected $fillable = [
         'id', 'name', 'city', 'country', 'description', 'address', 'phone', 'email',
         'star_rating', 'latitude', 'longitude', 'region_id',
-        'images', 'amenities'
+        'images', 'amenities', 'metapolicy_struct', 'metapolicy_extra_info'
     ];
 
     protected $casts = [
         'images' => 'array',
         'amenities' => 'array',
+        'metapolicy_struct' => 'array',
     ];
 }

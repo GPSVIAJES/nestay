@@ -1,4 +1,15 @@
 <?php
+/**
+ * ============================================================
+ * ETG / RateHawk API Certification — Full Booking Test
+ * ============================================================
+ * Requirements:
+ *   - Room 1: 2 Adults + 1 Child (age 5)
+ *   - Room 2: 2 Adults
+ *   - Hotel:  test_hotel_do_not_book (hid 8473727)
+ *   - Residency: uz
+ * ============================================================
+ */
 require __DIR__.'/vendor/autoload.php';
 $app = require_once __DIR__.'/bootstrap/app.php';
 $kernel = $app->make(Illuminate\Contracts\Console\Kernel::class);
@@ -9,115 +20,259 @@ use App\Services\RateHawk\RateHawkClient;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Str;
 
-Config::set('ratehawk.use_mock', false); // Force real API
+// Force real API (never mock for certification)
+Config::set('ratehawk.use_mock', false);
 
-$client = app(RateHawkClient::class);
+$client         = app(RateHawkClient::class);
 $bookingService = app(BookingService::class);
 
-echo "========================================\n";
-echo "  RATEHAWK END-TO-END BOOKING TEST (SANDBOX)\n";
-echo "========================================\n\n";
+// ── CERTIFICATION PARAMETERS ──────────────────────────────────
+$TEST_HOTEL_ID = 'test_hotel_do_not_book';
+$CHECKIN       = date('Y-m-d', strtotime('+30 days'));   // 30 days from now
+$CHECKOUT      = date('Y-m-d', strtotime('+32 days'));   // 2-night stay
+$RESIDENCY     = 'uz';
+$CURRENCY      = 'USD';
+$LANGUAGE      = 'en';
 
-// 1. SEARCH (SERP)
-echo "[1] Searching hotels in Madrid (Region 4230)...\n";
-$serp = $client->post('api/b2b/v3/search/serp/region/', [
-    'region_id' => 4230,
-    'checkin' => '2026-05-01',
-    'checkout' => '2026-05-05',
-    'guests' => [['adults' => 2]],
-    'language' => 'es',
-    'currency' => 'USD',
-    'residency' => 'US',
-]);
+// Room 1: 2 adults + 1 child (age 5)
+// Room 2: 2 adults
+$GUESTS = [
+    ['adults' => 2, 'children' => [5]],  // Room 1 with child age 5
+    ['adults' => 2, 'children' => []],   // Room 2
+];
 
-if (empty($serp['data']['hotels'])) {
-    die("Error: No hotels found or API error: " . json_encode($serp) . "\n");
+// ── HELPERS ───────────────────────────────────────────────────
+function section(string $title): void {
+    echo "\n" . str_repeat('─', 60) . "\n";
+    echo "  $title\n";
+    echo str_repeat('─', 60) . "\n";
 }
-$hotel = $serp['data']['hotels'][0];
-$hotelId = $hotel['id'];
-echo "    -> Found Hotel: " . $hotel['name'] . " ($hotelId)\n\n";
 
-// 2. HOTEL PAGE (Rates)
-echo "[2] Fetching rates for hotel $hotelId (HotelPage)...\n";
+function ok(string $msg): void   { echo "  ✅  $msg\n"; }
+function info(string $msg): void { echo "  ℹ️   $msg\n"; }
+function fail(string $msg): void { echo "  ❌  $msg\n"; }
+function dump(mixed $data): void { echo json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE) . "\n"; }
+
+echo "\n";
+echo str_repeat('═', 60) . "\n";
+echo "  ETG API CERTIFICATION — MULTIROOM + CHILD BOOKING TEST\n";
+echo "  Hotel: $TEST_HOTEL_ID\n";
+echo "  Checkin: $CHECKIN  →  Checkout: $CHECKOUT\n";
+echo "  Room 1: 2 Adults + 1 Child (age 5)\n";
+echo "  Room 2: 2 Adults\n";
+echo "  Residency: $RESIDENCY\n";
+echo str_repeat('═', 60) . "\n";
+
+// ============================================================
+// STEP 1 — HOTEL PAGE (get rates for the test hotel directly)
+// ============================================================
+section('STEP 1 — HOTEL PAGE (/search/hp/)');
+info("Fetching rates for test hotel...");
+
 $hp = $client->post('api/b2b/v3/search/hp/', [
-    'id' => $hotelId,
-    'checkin' => '2026-05-01',
-    'checkout' => '2026-05-05',
-    'guests' => [['adults' => 2]],
-    'language' => 'es',
-    'currency' => 'USD',
-    'residency' => 'US',
+    'id'        => $TEST_HOTEL_ID,
+    'checkin'   => $CHECKIN,
+    'checkout'  => $CHECKOUT,
+    'guests'    => $GUESTS,
+    'language'  => $LANGUAGE,
+    'currency'  => $CURRENCY,
+    'residency' => $RESIDENCY,
 ]);
+
+echo "\n  RAW Hotel Page Response:\n";
+dump($hp);
 
 if (empty($hp['data']['hotels'][0]['rates'])) {
-    die("Error: No rates found for this hotel.\n");
+    fail("No rates available for test hotel. Full response above.");
+    fail("Make sure your API credentials are valid and sandbox is accessible.");
+    exit(1);
 }
-$rate = $hp['data']['hotels'][0]['rates'][0];
-$bookHash = $rate['book_hash'];
-echo "    -> Found Rate: " . $rate['room_name'] . " - " . $rate['payment_options']['payment_types'][0]['show_amount'] . " USD\n";
-echo "    -> Initial Book Hash: $bookHash\n\n";
 
-// 3. PREBOOK
-echo "[3] Prebooking the rate...\n";
-$prebook = $bookingService->prebook($bookHash);
+$hotelData  = $hp['data']['hotels'][0];
+$rate       = $hotelData['rates'][0];
+$bookHash   = $rate['book_hash'];
+$rateAmount = $rate['payment_options']['payment_types'][0]['show_amount'] ?? 0;
+$rateCurr   = $rate['payment_options']['payment_types'][0]['show_currency_code'] ?? $CURRENCY;
+
+ok("Hotel Page OK. Found " . count($hotelData['rates']) . " rate(s).");
+ok("Selected rate:  {$rate['room_name']}");
+ok("Price:          $rateAmount $rateCurr");
+ok("Initial hash:   $bookHash");
+
+// ============================================================
+// STEP 2 — PREBOOK (/hotel/prebook/)
+// ============================================================
+section('STEP 2 — PREBOOK (/hotel/prebook/)');
+info("Prebooking rate with price_increase_percent=0...");
+
+$prebook = $bookingService->prebook($bookHash, 0);
+
+echo "\n  RAW Prebook Response:\n";
+dump($prebook);
+
 if (($prebook['status'] ?? '') !== 'ok') {
-    die("Error in Prebook: " . json_encode($prebook) . "\n");
+    fail("Prebook failed. See response above.");
+    exit(1);
 }
-$newBookHash = $prebook['data']['price_changes']['book_hash'] ?? $bookHash;
-echo "    -> Prebook OK. Validated Hash: $newBookHash\n\n";
 
-// 4. BOOKING FORM
-echo "[4] Creating Booking Form...\n";
-$partnerOrderId = 'test-' . time() . '-' . Str::random(5);
+// ETG returns the confirmed hash in data.book_hash or data.price_changes.book_hash
+$newBookHash   = $prebook['data']['book_hash']
+    ?? $prebook['data']['price_changes']['book_hash']
+    ?? $bookHash;
+
+$prebookPrice  = $prebook['data']['price_changes']['new_price']['show_amount']
+    ?? $rateAmount;
+
+$priceChanged  = ($prebookPrice != $rateAmount);
+
+ok("Prebook OK.");
+ok("Confirmed hash: $newBookHash");
+if ($priceChanged) {
+    echo "  ⚠️   PRICE CHANGED: was $rateAmount → now $prebookPrice $rateCurr (user would be notified in UI)\n";
+} else {
+    ok("Price unchanged: $prebookPrice $rateCurr");
+}
+
+// ============================================================
+// STEP 3 — BOOKING FORM (/order/booking/form/)
+// ============================================================
+section('STEP 3 — BOOKING FORM (/order/booking/form/)');
+$partnerOrderId = (string) Str::uuid();
+info("Creating booking form with partner_order_id: $partnerOrderId");
+
 $form = $bookingService->createBookingForm($newBookHash, $partnerOrderId);
-if (($form['status'] ?? '') !== 'ok') {
-    die("Error in Booking Form: " . json_encode($form) . "\n");
-}
-echo "    -> Form created! Partner Order ID: $partnerOrderId\n\n";
 
-// 5. START BOOKING (FINISH)
-echo "[5] Starting the Booking process...\n";
+echo "\n  RAW Booking Form Response:\n";
+dump($form);
+
+if (($form['status'] ?? '') !== 'ok') {
+    fail("Booking Form failed. Error: " . ($form['error'] ?? 'unknown'));
+    exit(1);
+}
+
+ok("Booking Form created successfully.");
+ok("Partner Order ID: $partnerOrderId");
+
+// ============================================================
+// STEP 4 — START BOOKING (/order/booking/finish/)
+// ============================================================
+section('STEP 4 — START BOOKING (/order/booking/finish/)');
+info("Submitting guest details and triggering booking...");
+
+// Build the rooms/guests array exactly as ETG requires:
+//   Room 1: 2 adults (named) + 1 child (with age)
+//   Room 2: 2 adults (named)
 $bookingData = [
     'partner_order_id' => $partnerOrderId,
-    'book_hash' => $newBookHash,
-    'hotel_id' => $hotelId,
-    'hotel_name' => $hotel['name'],
-    'check_in' => '2026-05-01',
-    'check_out' => '2026-05-05',
-    'guests' => 2,
-    'currency' => 'USD',
-    'total_price' => $rate['payment_options']['payment_types'][0]['show_amount'],
-    'guest' => [
-        'first_name' => 'John',
-        'last_name' => 'Doe',
-        'email' => 'john.doe@example.com',
-        'phone' => '+1234567890'
-    ]
-];
-$book = $bookingService->startBooking($bookingData, null);
-if (($book['status'] ?? '') !== 'ok') {
-    die("Error starting booking: " . json_encode($book) . "\n");
-}
-echo "    -> Booking sent to supplier! Status: Processing\n\n";
+    'book_hash'        => $newBookHash,
+    'hotel_id'         => $TEST_HOTEL_ID,
+    'hotel_name'       => $hotelData['id'] ?? $TEST_HOTEL_ID,
+    'hotel_city'       => 'Test City',
+    'hotel_country'    => 'Test Country',
+    'check_in'         => $CHECKIN,
+    'check_out'        => $CHECKOUT,
+    'guests'           => 4,    // total adults
+    'children'         => 1,    // total children
+    'currency'         => $CURRENCY,
+    'total_price'      => $prebookPrice,
+    'cancellation_policy' => json_encode($rate['cancellation_info'] ?? []),
 
-// 6. CHECK BOOKING STATUS (POLLING)
-echo "[6] Checking booking status (Polling)...\n";
-for ($i = 1; $i <= 10; $i++) {
-    $status = $bookingService->pollBookingStatus($partnerOrderId);
-    $apiStatus = $status['data']['status'] ?? 'unknown';
-    echo "    -> Polling attempt $i: Status is '$apiStatus'\n";
-    
-    if ($apiStatus === 'ok') {
-        echo "\n✅ BOOKING SUCCESSFUL! (RateHawk responded with OK)\n";
-        break;
-    } elseif (in_array($apiStatus, ['failed', 'cancelled'])) {
-        echo "\n❌ BOOKING FAILED! Error: " . ($status['error'] ?? 'unknown') . "\n";
+    // Lead guest (for local DB)
+    'guest' => [
+        'first_name' => 'Ivan',
+        'last_name'  => 'Petrov',
+        'email'      => 'test@nestay.com',
+        'phone'      => '+998901234567',
+    ],
+
+    // Per-room guest list (for ETG API payload)
+    'rooms' => [
+        // Room 1: 2 adults + 1 child age 5
+        [
+            'guests' => [
+                ['first_name' => 'Ivan',   'last_name' => 'Petrov'],
+                ['first_name' => 'Maria',  'last_name' => 'Petrova'],
+                ['first_name' => 'Alyosha','last_name' => 'Petrov', 'is_child' => true, 'age' => 5],
+            ]
+        ],
+        // Room 2: 2 adults
+        [
+            'guests' => [
+                ['first_name' => 'Dmitri', 'last_name' => 'Smirnov'],
+                ['first_name' => 'Elena',  'last_name' => 'Smirnova'],
+            ]
+        ],
+    ],
+];
+
+$book = $bookingService->startBooking($bookingData, null);
+
+echo "\n  RAW Booking Finish Response:\n";
+dump($book);
+
+$bookStatus = $book['status'] ?? '';
+$bookError  = $book['error']  ?? '';
+
+if (!in_array($bookStatus, ['ok', 'processing']) && empty($bookError)) {
+    fail("Booking Finish returned unexpected status. See response above.");
+    exit(1);
+}
+
+ok("Booking Finish sent. Status: $bookStatus");
+
+// ============================================================
+// STEP 5 — POLL STATUS (/order/booking/finish/status/)
+// ============================================================
+section('STEP 5 — POLLING STATUS (/order/booking/finish/status/)');
+info("Polling every 3 seconds (max 20 attempts = 60s)...\n");
+
+$finalStatus = 'pending';
+$orderId     = null;
+$MAX_POLLS   = 20;
+$terminalErrors = ['soldout','book_limit','provider','not_allowed',
+                   'booking_finish_did_not_succeed','block','charge','3ds'];
+
+for ($i = 1; $i <= $MAX_POLLS; $i++) {
+    $poll       = $bookingService->pollBookingStatus($partnerOrderId);
+    $pollStatus = $poll['data']['status'] ?? '';
+    $pollError  = $poll['error']          ?? '';
+    $orderId    = $poll['data']['order_id'] ?? $orderId;
+
+    echo "  [{$i}/{$MAX_POLLS}] Status: '$pollStatus'" . ($pollError ? " | Error: '$pollError'" : '') . "\n";
+
+    if ($pollStatus === 'ok' || $pollStatus === 'confirmed') {
+        $finalStatus = 'confirmed';
         break;
     }
-    
-    sleep(2);
+
+    if (in_array($pollError, $terminalErrors) || in_array($pollStatus, ['failed', 'cancelled'])) {
+        $finalStatus = 'failed';
+        break;
+    }
+
+    if ($i < $MAX_POLLS) sleep(3);
 }
 
-echo "========================================\n";
-echo "  TEST COMPLETE\n";
-echo "========================================\n";
+// ============================================================
+// FINAL RESULT
+// ============================================================
+echo "\n" . str_repeat('═', 60) . "\n";
+if ($finalStatus === 'confirmed') {
+    ok("BOOKING CONFIRMED! ✅");
+    ok("Partner Order ID: $partnerOrderId");
+    ok("ETG Order ID:     " . ($orderId ?? 'Check ETG dashboard'));
+    echo "\n";
+    echo "  ★  Send this to ETG in the checklist:\n";
+    echo "     Partner Order ID: $partnerOrderId\n";
+    if ($orderId) {
+        echo "     ETG Order ID:     $orderId\n";
+    }
+} elseif ($finalStatus === 'failed') {
+    fail("BOOKING FAILED after polling.");
+    info("Check ETG sandbox dashboard for the order: $partnerOrderId");
+} else {
+    echo "  ⏳  Still processing after $MAX_POLLS polls.\n";
+    info("Partner Order ID: $partnerOrderId");
+    info("Poll manually at: /api/b2b/v3/hotel/order/booking/finish/status/");
+}
+echo str_repeat('═', 60) . "\n\n";
